@@ -1,84 +1,73 @@
-# Disclaimer
+Services
+===============================================================================
 
-Prawdopodobnie przesadziłem ze scopem naszej aplikacji, ale wolę zaprezentować więcej, a potem wybierać to, co jest ważne. 
+Front
+-------------------------------------------------------------------------------
 
-# Wizja
-
-Naszym podstawowym celem jest stworzenie aplikacji umożliwiającej analizę danych w czasie rzeczywistym i wyświetlanie wyników na FE w postaci wykresów `Time -> Value`, liczników z aktualnymi wartościami wskaźników, lub innych sposobów, które uznamy za odpowiednie. Przypadkiem użycia, na którym będziemy się skupiać, jest analiza cen na giełdzie, ale chcemy, aby aplikacje dawało się łatwo stosować także do innych sytuacji. 
-
-Jednym z celów aplikacji jest umożliwienie łatwego tworzenia i modyfikacji istniejących reguł wykorzystywanych do analizy danych. Powinno dać się zmienić co i jak jest wyliczane bez modyfikowania kodu żadnego segmentu aplikacji poza mikroserwisem odpowiedzialnym za liczenie tego. Dodatkowo implementacja mikroserwisu przeliczającego to nie powinna wymagać przejmowania się problemami normalnie występującymi przy obliczeniach rozproszonych, takimi jak utrzymywanie stanu, zabezpieczeniem przed błędami, ... .
-
-# Opis
-
-## Pojęcia 
-
-***Zmienna*** &ndash; wartość, która zmienia się w czasie; może być reprezentowana jako funkcja `f: Time -> Value`; może to być cena akcji, liczba wejść na stronę, odchylenie standardowe innej zmiennej, ... .
-
-***Użytkownik*** &ndash; osoba, która wykorzystuje aplikacje do wyświetlania wyników analizy, w szczególności nie zajmuje się i nie zna się na zmienianiu wyliczanych statystyk i konfigurowaniu zależności między nimi, jest przypisany do organizacji, która zajmuje się tym za niego; może mieć przypisany ograniczony zbiór zmiennych, o których wie, i, które może wyświetlać. 
-
-***Organizacja*** &ndash; podmiot odpowiedzialny za zdefiniowanie i zarządzanie wybranymi zmiennymi; ma przypisanych użytkowników i może definiować, do czego mają dostęp. 
+Service used to create responses to end user by sending requests to other services and processing responses. 
 
 
-# Mikroserwisy
+### API
 
-## Frontend
+I will not write down all posible request, because they depend on the desing of frontend. One request is listed, because it is a base for all other non-trival requests, but it will not be available itself. 
 
-Nie ma tu żadnego opisu. Każdy wie, co robi frontend.
-
-## Użytkownicy 
-
-Obsługuje bazę danych użytkowników, udostępnia dane wybranego użytkownika i obsługuje logowanie i wylogowywanie. 
-
-## Organizacje
-
-Umożliwia zarządzanie aplikacjami, tj. podgląd zadeklarowanych zmiennych, możliwość wstrzymywania i wznawiania obliczeń. Dodatkowo umożliwia tworzenie użytkowników/podpinanie użytkowników i udostępnianie im zmiennych. 
-
-Ten serwis jest wykorzystywany przez wszystkie serwisy poza tymi, które zostały zaprojektowane jako łatwo wymienialne. Możliwe, że potrzebny jest jakiś redesign, może trzeba wydzielić cześć trzymającą informacje, co należy liczyć, a może trzeba zaakceptować, że ten serwis ma informacje, których wszyscy inni potrzebują.
-
-## Zmienne 
-
-Odpowiada za utrzymanie wiedzy na temat zadeklarowanych zmiennych. Umożliwia dopisywanie nowych informacji i udostępnia już zapisane. Do tego wysyła i odbiera dane od koordynatora obliczeń, aby umożliwić wyliczanie nowych informacji na temat zmiennych. 
-
-## Koordynator obliczeń
-
-Przyjmuje dane potrzebne do wyliczania zmiennych, rozdziela te informacji między nody mikroserwisu obliczenia, zbiera wyniki i zwraca je do mikroserwisu zmienne. Jego zadaniem jest radzenie sobie ze wszystkimi problemami występującymi przy rozproszonych obliczeniach. Musi dbać oto, aby każdy wynik był zwrócony dokładnie raz, aby stan nodów nie został zepsuty, aby obliczenia były w miarę równo rozłożone, ... .
-
-## Obliczenia
-
-Oblicza wartości zmiennych. Powinien być zaprojektowany tak, aby dało się go łatwo wymieniać. Nie powinien samodzielnie zajmować się problemami obliczeń na wielu maszynach, ale będą nałożone pewne ograniczenia na to, co może robić.
-
-Możliwe, że rozsądne jest dodanie wymagania, że ten serwis albo jego nody mają mieć informacje, jakie zmienne wyliczają i jakich danych do tego potrzebują. 
-
-## Scrapper
-
-Odpowiada za pobieranie danych z zewnątrz. Podobnie jak mikroserwis obliczenia, powinien dawać się łatwo wymieniać. 
+- `REQUEST SHOW_STATS: stat_names: [StatName] -> [(StatName, [(Time, Value)])]`  
+Returns histories of values of listed statistics. It is calculated by making a series of requests to `Statistics` service. We do not guarantee that amount of displayed values is consistent. This request may return things like `{"a": [6, 8], "b": [3, 2], "a/b": [2, 4, 3]}` and it is OK as long as calculated values are actually correct. 
 
 
-# Zależności 
+### Scaling
 
-### Frontend &ndash; Użytkownicy 
-Oczywiste.
+This is a stateless component that does not make use of any database, so it can be easily scaled just by adding additional nodes.  
 
-### Frontend &ndash; Organizacje
-Oczywiste.
 
-### Frontend &ndash; Zmienne
-Udostępnia wartości do wyświetlenia. 
+### Load balancing
 
-### Użytkownicy &ndash; Organizacje
-Wymiana informacji na temat tego, do jakich zmiennych dany użytkownik ma dostęp. Chyba organizacja powinna trzymać informacje na temat dostępnych zmiennych, a użytkownicy powinni je tylko pobierać. 
+This is a simple stateless request-response server so there are no additional requirements for load balancing. We can use generic solution that will most likely be presented during future classes. 
 
-### Zmienne &ndash; Organizacje
-Udostępniają informacje na temat tego, co powinno być wyliczane. 
 
-### Zmienne &ndash; Koordynator obliczeń
-Wysyła dane wymagane do obliczania nowych wartości zmiennych i otrzymuje nowe dane. 
+### Caching
 
-### Zmienne &ndash; Scrapper
-Otrzymuje informacje na temat zmiennych, które później są wykorzystywane do wyliczania innych zmiennych.
+We should be able to cache answers to requests as they are quite similar, but it may not be neccessary as there will also be caching in front of `Statistics` service and we do not do any expensive computations here. 
 
-### Koordynator obliczeń &ndash; Obliczenia
-Zleca każdemu nodowy i serwisie obliczenia, którymi zmiennymi powinien się zajmować oraz wysyła i odbiera odpowiednie dane. 
+We need to remember that cached responses cannot live long, because statistics are constantly updated and we do not want present outdated information. We can safely store responses for $1/r$ and storage times around $O(1/r)$ could prove reasonable balance between latency and preformance. 
 
-### Koordynator obliczeń &ndash; Organizacje
-Trzeba jakoś ogarnąć wymianę informacji o tym, co i jak wyliczać. 
+
+
+Statistics
+-------------------------------------------------------------------------------
+
+Service used to hold information about values of the tracked statistics. It serves as a connector between processing segment where values are calculated and front segment where they are displayed. This component exists to provide quick access to all values of given statistic. Taking values directly from asynchronous queue would most likely be slower and it would put unncessary load on the queue.  
+
+
+### API
+
+- `REQUEST GET_STAT: StatName -> [(Time, Value)]`  
+Returns values of given statistic based on data stored in the database. It returns data based on what is currently available in the database. It does not wait for any missing values. 
+
+- `REQUEST APPEND_STAT: StatName, [(Time, Value)] -> Unit`  
+Adds new values to the database. If some values already exist than they are ignored and `WARNING` is loged.
+
+
+### Scaling
+
+Read accesses can easily be scaled without any upper limit, because they can be satisfied with any information that is recovered from the database in a very simple transaction (basicaly `SELECT * FROM name`). 
+
+Write accesses require some considerations but there is nothing problematic here, because there is no synchronization needed between different writes or reads and writes. This seems like a common problem that has been already solved, so we will just implement a popular solution. 
+
+
+### Load balancing
+
+We will use some basic load balancing. All operations are stateless except for modifying database, so there should be no need for anything special
+
+
+### Database
+
+We will access our database by making request like get all variables for given key and add new variables for given key. Read requests will likely be more common than write requests even when we consider the fact that read request are much bigger. 
+
+There is no synchronization needed so we only need to care about read and write efficiency of the database. 
+
+
+### Caching
+
+We can cache read requests and this may significantly reduce loads when there is a lot of frontend users. As with `Front` service, responses cannot be cached for too long because underlying data will change.  
+
