@@ -1,14 +1,15 @@
-## Service name 
+Service name
+===============================================================================
 
 Short description that describes main purpose of the service.
 
 
-### Processing (optional)
+## Processing (optional)
 
 Description of how computations are organized in a service. This section is unncessary in request-response stateless services, but it can include important information about state-handling or running bath processing. 
 
 
-### API
+## API
 
 Description of all request this api can do. Alternatively it can describe asynchronous communication. It should include short description of how responses are created. 
 
@@ -22,32 +23,32 @@ Type of events that can be received through asynchronous queue. Includes all act
 Type of events sent to asynchronous queue. Includes description of condition that cause this output to be used. 
 
 
-### Scaling
+## Scaling
 
 How service is scaled, including limitations on how much it can be scaled and considerations how much scaling is required. If neccessary, it should include statement when we stop carring about scaling further. 
 
 
-### Load balancing
+## Load balancing
 
 Description of load balancing solution with their limitations and drawbacks.
 
 
-### Database (optional)
+## Database (optional)
 
 Description of expected performance characteristics of the database and considerations regarding scaling it.
 
 
-### Caching (optional)
+## Caching (optional)
 
 Description of what is cached and how it affects computations and performance in general. 
 
 
-### Open questions
+## Open questions
 
 - Where can we write about questions that are still not answered or are under considerations?  
 Open questions is a great section to talk about anything that still has not been decided.
 
 
-### Notes
+## Notes
 
 Place to leave anything else. 
