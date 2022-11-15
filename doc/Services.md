@@ -6,7 +6,7 @@ Service used to create responses to end user by sending requests to other servic
 
 ## API
 
-I will not write down all possible request, because they depend on the design of frontend. Two requests are listed, because they are a base for all other nontrivial requests, but they will likely not be available itself. 
+I will not write down all possible request, because they depend on the design of frontend. Two requests are listed, because they are a base for all other nontrivial requests, but they will likely not be available themselves. 
 
 - `REQUEST SHOW_VARS: [VarName] -> [(VarName, Time, [Value])]`  
 Returns histories of values of listed variables. The response includes the timestamp of the first value, and all values are chronologically, and there are no gabs between them. It is calculated by making a series of requests to `Statistics` service. We do not guarantee that the number of displayed values is consistent. This request may return things like `{"a": [6, 8], "b": [3, 2], "a/b": [2, 4, 3]}` and it is OK as long as calculated values are actually correct.
@@ -32,6 +32,12 @@ We should be able to cache answers to requests as they are quite similar, but it
 We need to remember that cached responses cannot live long, because statistics are constantly updated, and we do not want to present outdated information. We can safely store responses for as long as time between updates, but not much longer. We may decide that frontend always calls `SHOW_VARS` and `SHOW_UPDATES` immediately after, then we should be able to cache `SHOW_VARS` requests almost indefinitely. 
 
 
+## Tools
+This is quite generic web server so we have great freedom in choosing tools. I would suggest trying Go for this service. It is generaly liked and is considered good language for creating web servers. It would also be good oportunity to try it out, because it is a simple component and not much can go wrong, even when we do not have experience with Go. 
+
+Alternatively, if we to use something we have experience with, then Python and Flask are a great choice. 
+
+
 
 Statistics
 ===============================================================================
@@ -47,31 +53,40 @@ Returns timestamp of first value and list of values of given statistic based on 
 - `REQUEST GET_UPDATE: VarName, Time -> [Value]`  
 Returns list of values of given variable with timestamps after given time. Values are sorted chronologically and there are no gabs, so there is no need to include timestamps. 
 
-- `ASYNC INPUT APPEND_VAR: VarName, Time, Value`  
-Adds new value for given variable. If a value with a given timestamp already exists, it is ignored. Timestamp is included, because one value may be sent multiple times, e.g. because of failures of `Calculations manager`.
+- `ASYNC INPUT APPEND_VAR: VarName, Time, Value -> ()`  
+Adds new value for given variable. If a value with a given timestamp already exists, it is ignored. Timestamp is included, because we may have gabs in calculated values.
 
 ## Scaling
 
-Read accesses can easily be scaled without any upper limit, because they can be satisfied with any information that is recovered from the database in a very simple transaction (basically `SELECT * FROM name` or `SELECT * FROM name WHERE time >= x`). 
+Read accesses can easily be scaled without any upper limit, because they can be satisfied with any information that is recovered from the database in a very simple transaction (basically `SELECT * FROM vars WHERE key = name AND time > t`). 
 
-Write accesses require some considerations, but there is nothing problematic here, because there is no synchronization needed between different writes or reads and writes. This seems like a common problem that has been already solved, so we will just implement a popular solution. 
+Writes may be problematic, but they should not be very difficult. Request can mix with writes in any way they want, and writes are guaranteed to not be contradictory. If we assume that trying to write value, that already exists, is ignored, then we should not need any synchronization between writes.  
 
 
 ## Load balancing
 
-We will use some basic load balancing. All operations are stateless except for writing to the database, so there should be no need for anything special.
+We will use some basic load balancing. All operations are stateless except for writing to the database, but it handled by assynchronous queue. 
 
 
 ## Database
 
-We will access our database by making request like get all variables for given key and add new variables for given key. Read requests will likely be more common than write requests, and furthermore they are much bigger. 
+We will be making two kinds of requests to the database
 
-There is no synchronization needed, so we only need to care about read and write efficiency of the database. 
+`SELECT * FROM vars WHERE name = n AND time >= t`
+
+`INSERT (name, time, value) INTO vars`
+
+and we can guarantee that inserted data will have times more or less in order. Maybe it can be done with simple key-value store, but most likely we needs something more capable. Luckly we do not require any transactional guarantees.
 
 
 ## Caching
 
 We can cache read requests, and this may significantly reduce loads when there are a lot of frontend users. As with `Front` service, responses cannot be cached for too long because underlying data will change.  
+
+
+## Tools
+
+I have not found the right database yet and all other choices will be dependent on chosen database and existing libraries for it. 
 
 
 

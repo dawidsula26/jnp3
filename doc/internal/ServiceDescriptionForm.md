@@ -43,6 +43,10 @@ Description of expected performance characteristics of the database and consider
 Description of what is cached and how it affects computations and performance in general. 
 
 
+## Tools
+Language and frameworks/libaries used with justification for this choice. 
+
+
 ## Open questions
 
 - Where can we write about questions that are still not answered or are under considerations?  
