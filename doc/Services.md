@@ -8,11 +8,11 @@ Service used to create responses to end user by sending requests to other servic
 
 I will not write down all possible request, because they depend on the design of frontend. Two requests are listed, because they are a base for all other nontrivial requests, but they will likely not be available themselves. 
 
-- `REQUEST SHOW_VARS: [VarName] -> [(VarName, Time, [Value])]`  
-Returns histories of values of listed variables. The response includes the timestamp of the first value, and all values are chronologically, and there are no gabs between them. It is calculated by making a series of requests to `Statistics` service. We do not guarantee that the number of displayed values is consistent. This request may return things like `{"a": [6, 8], "b": [3, 2], "a/b": [2, 4, 3]}` and it is OK as long as calculated values are actually correct.
+- `REQUEST SHOW_VARS: [VarName] -> [(VarName, [Value])]`  
+Returns histories of values of listed variables. We do not guarantee that the number of displayed values is consistent. This request may return things like `{"a": [6, 8], "b": [3, 2], "a/b": [2, 4, 3]}` and it is OK as long as calculated values are actually correct.
 
 - `REQUEST SHOW_UPDATES: [(VarName, Time)] -> [(VarName, [Value])]`  
-Returns histories of given variables from given timestamp forwards. We only send values and assume that frontend should be able to calculate their timestamps, as long as they are chronologically and without gabs.
+Returns histories of given variables from given timestamp forwards.
 
 
 ## Scaling
@@ -47,20 +47,20 @@ Service used to hold information about values of the tracked statistics. It serv
 
 ## API
 
-- `REQUEST GET_VAR: VarName -> (Time, [Value])`  
+- `REQUEST GET_VAR: VarName -> [Value]`  
 Returns timestamp of first value and list of values of given statistic based on data stored in the database. It returns data based on what is currently available in the database. It does not wait for any missing values. 
 
 - `REQUEST GET_UPDATE: VarName, Time -> [Value]`  
-Returns list of values of given variable with timestamps after given time. Values are sorted chronologically and there are no gabs, so there is no need to include timestamps. 
+Returns list of values of given variable with timestamps after given time.
 
-- `ASYNC INPUT APPEND_VAR: (VarName, Time, Value)`  
-Adds new value for given variable. If a value with a given timestamp already exists, it is ignored. Timestamp is included, because we may have gabs in calculated values.
+- `ASYNC INPUT APPEND_VAR: (VarName, Value)`  
+Adds new value for given variable. If a value with a given timestamp already exists, it is ignored.
 
 ## Scaling
 
 Read accesses can easily be scaled without any upper limit, because they can be satisfied with any information that is recovered from the database in a very simple transaction (basically `SELECT * FROM vars WHERE key = name AND time > t`). 
 
-Writes may be problematic, but they should not be very difficult. Request can mix with writes in any way they want, and writes are guaranteed to not be contradictory. If we assume that trying to write value, that already exists, is ignored, then we should not need any synchronization between writes.  
+Writes may be problematic, but they should not be very difficult. Reads can mix with writes in any way they want, and writes are guaranteed to not be contradictory (and even when they are, we said that then we can choose arbitrary one).
 
 
 ## Load balancing
@@ -90,7 +90,7 @@ I have not found the right database yet, and all other choices will be dependent
 
 
 
-Calculation manager
+Calculations
 ===============================================================================
 
 Service responsible for handling computation of statistics. It must provide nice programmer API for declaring new statistics. 
@@ -98,21 +98,39 @@ Service responsible for handling computation of statistics. It must provide nice
 
 ## Processing
 
-We will use a prepared framework for processing stream data. It will be fed with scraped values, process them, and send them further to `Statistics`. 
+We will use a prepared framework for processing stream data. It will take definitions of statistics to calculate in form like
+
+```json
+{
+    name: "VarName"
+    function: f
+    requirements: ["var1", "var2", "var3"]
+}
+```
+
+convert it into definitions of stream computations and additional element responsible for feeding data and sending it further to `Statistics`. Then it start streams and run them until stopped.
 
 
 ## API
 
-- `ASYNC INPUT PROCESS_VAR: (VarName, Time, Value)`   
+- `ASYNC INPUT PROCESS_VAR: (VarName, Value)`   
 Receives values from scrappers and processes them.
 
 
-- `ASYNC OUTPUT APPEND_VAR: (VarName, Time, Value)`   
+- `ASYNC OUTPUT APPEND_VAR: (VarName, Value)`   
 Place where computed results are sent to next component. 
+
+- `STOP`
+There should be some way of gracefully stopping this component to make some changes. 
 
 
 ## Scaling / Load Balancing / Database
 This service is just a wrapper for a stream processing framework, so the framework handle all of it. 
+
+
+## Tools
+
+Kafka Streams looks like the best solution. It can handle stateful computations that will be useful, it supports newest version of Scala 2 (neither Kafka Streams nor Flink support Scala 3), and has some options that may useful if we decide to implement external calculations extension. Of course the language is Scala. 
 
 
 Collector
@@ -140,3 +158,8 @@ We statically assign different variables to different nodes. Collecting data sho
 ## Tools
 
 To be decided when we have decided on what and how will be collected.
+
+
+## Note 
+
+I actually don not care about this component. It could just be mocked data and project would not really suffer. 
