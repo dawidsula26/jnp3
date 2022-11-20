@@ -6,7 +6,7 @@ Short description that describes main purpose of the service.
 
 ## Processing (optional)
 
-Description of how computations are organized in a service. This section is unncessary in request-response stateless services, but it can include important information about state-handling or running bath processing. 
+Description of how computations are organized in a service. This section is unnecessary in request-response stateless services, but it can include important information about state-handling or running bath processing. 
 
 
 ## API
@@ -25,7 +25,7 @@ Type of events sent to asynchronous queue. Includes description of condition tha
 
 ## Scaling
 
-How service is scaled, including limitations on how much it can be scaled and considerations how much scaling is required. If neccessary, it should include statement when we stop carring about scaling further. 
+How service is scaled, including limitations on how much it can be scaled and considerations how much scaling is required. If necessary, it should include statement when we stop carrying about scaling further. 
 
 
 ## Load balancing
@@ -44,7 +44,7 @@ Description of what is cached and how it affects computations and performance in
 
 
 ## Tools
-Language and frameworks/libaries used with justification for this choice. 
+Language and frameworks/libraries used with justification for this choice. 
 
 
 ## Open questions
