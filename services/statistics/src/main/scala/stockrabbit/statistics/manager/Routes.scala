@@ -13,9 +13,25 @@ object Routes {
     val basePath = Root / "manager"
     HttpRoutes.of[F] {
       case GET -> `basePath` / "initializeDatabase" =>
-        for {
+        (for {
           _ <- M.initializeDatabase()
-          response <- Ok("ok")
+          response <- Ok("initialized")
+        } yield (response))
+        .handleErrorWith(err =>{
+          print(err)
+          Ok("error")
+        })
+
+      case GET -> `basePath` / "removeDatabase" =>
+        for {
+          _ <- M.removeDatabase()
+          response <- Ok("removed")
+        } yield (response)
+
+      case GET -> `basePath` / "fillWithGarbage" =>
+        for {
+          _ <- M.fillWithGarbage()
+          response <- Ok("filled with garbage")
         } yield (response)
     }
   }

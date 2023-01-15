@@ -10,13 +10,13 @@ import org.http4s._
 import org.http4s.circe._
 
 object GetVariable {
-  @JsonCodec(decodeOnly = true) case class Request(variableName: String)
+  @JsonCodec(decodeOnly = true) case class Request(variableName: Variable.Name)
   object Request {
     implicit def decoder[F[_]: Concurrent]: EntityDecoder[F, Request] =
       jsonOf
   }
 
-  @JsonCodec(encodeOnly = true) case class Response(variable: Variable)
+  @JsonCodec(encodeOnly = true) case class Response(variable: VariableTimeseries)
   object Response {
     implicit def encoder[F[_]]: EntityEncoder[F, Response] =
       jsonEncoderOf

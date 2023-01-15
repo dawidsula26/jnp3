@@ -4,6 +4,7 @@ import cats.effect._
 import cats.implicits._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
+import stockrabbit.statistics.model.Variable
 
 object Routes {
 
@@ -18,11 +19,15 @@ object Routes {
           response <- Ok(responseContent)
         } yield (response)
       case GET -> Root / "test" =>
-        val requestContent = GetVariable.Request("t")
-        for {
+        val requestContent = GetVariable.Request(Variable.Name("v"))
+        (for {
           responseContent <- R.getVariable(requestContent)
           response <- Ok(responseContent)
-        } yield (response)
+        } yield (response))
+        .handleErrorWith(err => {
+          print(err)
+          Ok("failed")
+        })
     }
   }
 }
