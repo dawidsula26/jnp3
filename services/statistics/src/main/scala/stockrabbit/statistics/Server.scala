@@ -1,21 +1,21 @@
 package stockrabbit.statistics
 
-import cats.effect.Async
+import cats.effect._
 import com.comcast.ip4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
+import mongo4cats.models.client._
+import mongo4cats.client._
 
 object StatisticsServer {
 
   def run[F[_]: Async]: F[Nothing] = {
-    val readerAlg = reader.Reader.impl[F]
-    val httpApp = (
-      reader.Routes.routes[F](readerAlg)
-    ).orNotFound
-    val finalHttpApp = Logger.httpApp(true, true)(httpApp)
-
     for {
+      mongoClient <- MongoClient.fromServerAddress(ServerAddress("localhost", 27017))
+      readerAlg = reader.Reader.impl[F](mongoClient)
+      httpApp = reader.Routes.routes[F](readerAlg).orNotFound
+      finalHttpApp = Logger.httpApp(true, true)(httpApp)
       _ <- 
         EmberServerBuilder.default[F]
           .withHost(ipv4"0.0.0.0")
