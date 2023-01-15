@@ -5,7 +5,6 @@ import mongo4cats.client.MongoClient
 import mongo4cats.models.client.ServerAddress
 import cats.effect._
 
-
 trait EnvMongo[F[_]] {
   def database: MongoDatabase[F]
 }

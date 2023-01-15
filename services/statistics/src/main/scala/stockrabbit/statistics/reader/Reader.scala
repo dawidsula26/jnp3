@@ -1,6 +1,5 @@
 package stockrabbit.statistics.reader
 
-import stockrabbit.statistics.model.VariableTimeseries
 import stockrabbit.statistics.environment.general.Environment
 
 import cats.effect._
@@ -17,15 +16,28 @@ object Reader {
   def impl[F[_]: Sync](env: Environment[F]): Reader[F] = new Reader[F]{
     def getVariable(request: GetVariable.Request): F[GetVariable.Response] = {
       val database = env.mongo.database
+      val filterName = Filter.eq("name", request.variableName)
+      val filterStartTime = request.startTime match {
+        case Some(t) => Filter.gte("timestamp", t)
+        case None => Filter.empty
+      }
+      val filterEndTime = request.endTime match {
+        case Some(t) => Filter.lt("timestamp", t)
+        case None => Filter.empty
+      }
       for {
         collection <- database.getCollectionWithCodec[Variable]("variables")
-        variables <- collection.find(Filter.empty).all
-      } yield (GetVariable.Response(VariableTimeseries(
+        variables <- collection
+          .withAddedCodec[Variable.Name]
+          .withAddedCodec[Variable.Timestamp]
+          .find(filterName && filterStartTime && filterEndTime)
+          .all
+      } yield (GetVariable.Response(
         request.variableName,
         Variable.Timestamp(0),
         Variable.Timestamp(1),
         variables.toSeq
-      )))
+      ))
     }
   }
 }

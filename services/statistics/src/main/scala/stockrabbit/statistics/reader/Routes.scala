@@ -19,7 +19,11 @@ object Routes {
           response <- Ok(responseContent)
         } yield (response)
       case GET -> Root / "test" =>
-        val requestContent = GetVariable.Request(Variable.Name("v"))
+        val requestContent = GetVariable.Request(
+          Variable.Name("v"), 
+          Some(Variable.Timestamp(0)),
+          Some(Variable.Timestamp(1))
+        )
         (for {
           responseContent <- R.getVariable(requestContent)
           response <- Ok(responseContent)
