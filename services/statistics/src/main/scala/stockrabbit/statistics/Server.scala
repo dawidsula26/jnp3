@@ -1,21 +1,35 @@
 package stockrabbit.statistics
 
+import stockrabbit.statistics.environment.general.Environment
+import stockrabbit.statistics.environment.general.Config
+import stockrabbit.statistics.manager.Manager
+import stockrabbit.statistics.reader.Reader
+
 import cats.effect._
+import cats.implicits._
 import com.comcast.ip4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
-import mongo4cats.models.client._
-import mongo4cats.client._
+import pureconfig._
+import pureconfig.generic.auto._
 
 object StatisticsServer {
 
   def run[F[_]: Async]: F[Nothing] = {
-    for {
-      mongoClient <- MongoClient.fromServerAddress(ServerAddress("localhost", 27017))
-      readerAlg = reader.Reader.impl[F](mongoClient)
-      httpApp = reader.Routes.routes[F](readerAlg).orNotFound
+    val config = ConfigSource.default.loadOrThrow[Config]
+    val resources = for {
+      env <- Environment.impl(config)
+
+      readerAlg = Reader.impl[F](env)
+      managerAlg = Manager.impl[F](env)
+
+      httpApp = (
+        reader.Routes.routes[F](readerAlg) <+> 
+        manager.Routes.routes[F](managerAlg)
+      ).orNotFound
       finalHttpApp = Logger.httpApp(true, true)(httpApp)
+      
       _ <- 
         EmberServerBuilder.default[F]
           .withHost(ipv4"0.0.0.0")
@@ -23,5 +37,6 @@ object StatisticsServer {
           .withHttpApp(finalHttpApp)
           .build
     } yield ()
-  }.useForever
+    resources.useForever
+  }
 }

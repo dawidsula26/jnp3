@@ -11,12 +11,6 @@ object Routes {
     val dsl = new Http4sDsl[F]{}
     import dsl._
     HttpRoutes.of[F] {
-      case GET -> Root / "testMongo" =>
-        for {
-          _ <- R.mongoTest()
-          response <- Ok("ok")
-        } yield (response)
-
       case request @ POST -> Root / "test" =>
         for {
           requestContent <- request.as[GetVariable.Request]

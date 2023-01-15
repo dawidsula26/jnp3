@@ -4,6 +4,7 @@ val MunitVersion = "0.7.29"
 val LogbackVersion = "1.2.11"
 val MunitCatsEffectVersion = "1.0.7"
 val MongoCatsVersion = "0.6.6"
+val PureConfigVersion = "0.17.2"
 
 lazy val root = (project in file("."))
   .settings(
@@ -23,7 +24,8 @@ lazy val root = (project in file("."))
       "ch.qos.logback"  %  "logback-classic"     % LogbackVersion         % Runtime,
       "org.scalameta"   %% "svm-subs"            % "20.2.0",
       "io.github.kirill5k" %% "mongo4cats-core" % MongoCatsVersion,
-      "io.github.kirill5k" %% "mongo4cats-embedded" % MongoCatsVersion % Test
+      "io.github.kirill5k" %% "mongo4cats-embedded" % MongoCatsVersion % Test,
+      "com.github.pureconfig" %% "pureconfig" % PureConfigVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
