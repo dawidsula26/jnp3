@@ -25,7 +25,6 @@ lazy val root = (project in file("."))
       "org.scalameta"   %% "svm-subs"            % "20.2.0",
       "io.github.kirill5k" %% "mongo4cats-core" % MongoCatsVersion,
       "io.github.kirill5k" %% "mongo4cats-embedded" % MongoCatsVersion % Test,
-      "io.github.kirill5k" %% "mongo4cats-circe" % MongoCatsVersion,
       "com.github.pureconfig" %% "pureconfig" % PureConfigVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full),
