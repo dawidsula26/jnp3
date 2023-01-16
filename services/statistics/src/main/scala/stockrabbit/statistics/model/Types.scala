@@ -11,21 +11,21 @@ import io.circe.Encoder
 )
 
 object Variable {
-  case class Name(name: String)
+  case class Name(name: String) extends AnyVal
   object Name {
-    implicit val decoder = Decoder.decodeString.map(Name(_))
-    implicit val encoder = Encoder.encodeString.contramap[Name](_.name)
+    implicit val decoder = Decoder[String].map(Name(_))
+    implicit val encoder = Encoder[String].contramap[Name](_.name)
   }
 
-  case class Value(value: Double)
+  case class Value(value: Double) extends AnyVal
   object Value {
-    implicit val decoder = Decoder.decodeDouble.map(Value(_))
-    implicit val encoder = Encoder.encodeDouble.contramap[Value](_.value)
+    implicit val decoder = Decoder[Double].map(Value(_))
+    implicit val encoder = Encoder[Double].contramap[Value](_.value)
   }
 
-  case class Timestamp(time: Int)
+  case class Timestamp(time: Int) extends AnyVal
   object Timestamp {
-    implicit val decoder = Decoder.decodeInt.map(Timestamp(_))
-    implicit val encoder = Encoder.encodeInt.contramap[Timestamp](_.time)
+    implicit val decoder = Decoder[Int].map(Timestamp(_))
+    implicit val encoder = Encoder[Int].contramap[Timestamp](_.time)
   }
 }
