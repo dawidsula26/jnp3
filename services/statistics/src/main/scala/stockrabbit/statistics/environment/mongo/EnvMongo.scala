@@ -6,8 +6,6 @@ import mongo4cats.models.client.ServerAddress
 import cats.effect._
 
 trait EnvMongo[F[_]] {
-  def collectionName: String
-
   def database: MongoDatabase[F]
 }
 
@@ -21,7 +19,6 @@ object EnvMongo {
     for {
       databaseValue <- mongoDatabase
     } yield (new EnvMongo[F] {
-      def collectionName: String = "variables"
       def database: MongoDatabase[F] = databaseValue
     })
   }
