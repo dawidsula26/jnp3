@@ -14,6 +14,8 @@ services:
       nofile:
         soft: "65536"
         hard: "65536"
+    environment:
+      SETUP_VERSION: "dockerTest"
   redis:
     image: "redis:alpine"
   mongo:
