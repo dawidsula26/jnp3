@@ -3,6 +3,7 @@ package stockrabbit.statistics.model
 import io.circe.generic.JsonCodec
 import io.circe.Decoder
 import io.circe.Encoder
+import java.time.Instant
 
 @JsonCodec case class Variable(
   name: Variable.Name, 
@@ -29,9 +30,9 @@ object Variable {
     implicit val encoder = Encoder[Double].contramap[Value](_.value)
   }
 
-  case class Timestamp(time: Int) extends AnyVal
+  case class Timestamp(time: Instant) extends AnyVal
   object Timestamp {
-    implicit val decoder = Decoder[Int].map(Timestamp(_))
-    implicit val encoder = Encoder[Int].contramap[Timestamp](_.time)
+    implicit val decoder = Decoder[Instant].map(Timestamp(_))
+    implicit val encoder = Encoder[Instant].contramap[Timestamp](_.time)
   }
 }

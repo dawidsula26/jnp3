@@ -6,8 +6,7 @@ import com.mongodb.client.model.TimeSeriesOptions
 import mongo4cats.models.database.CreateCollectionOptions
 import cats._
 import cats.implicits._
-import mongo4cats.bson.Document
-import mongo4cats.bson.BsonValue
+import mongo4cats.circe._
 import java.time.Instant
 import stockrabbit.statistics.model.Variable
 
@@ -36,14 +35,10 @@ object Manager {
     def fillWithGarbage(): F[Unit] = {
       val database = env.mongo.database
 
-      val var1 = Document(
-        Variable.Schema.name -> BsonValue.string("v"),
-        Variable.Schema.value -> BsonValue.double(4.8),
-        Variable.Schema.time -> BsonValue.instant(Instant.ofEpochSecond(0))
-      )
+      val var1 = Variable(Variable.Name("v"), Variable.Value(4.8), Variable.Timestamp(Instant.ofEpochSecond(0)))
 
       for {
-        collection <- database.getCollection(env.mongo.collectionName)
+        collection <- database.getCollectionWithCodec[Variable](env.mongo.collectionName)
         _ <- collection.insertOne(var1)
       } yield ()
     }

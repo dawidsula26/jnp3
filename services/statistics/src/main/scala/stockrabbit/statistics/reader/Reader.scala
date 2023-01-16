@@ -7,6 +7,7 @@ import mongo4cats.operations.Filter
 import cats.implicits._
 import stockrabbit.statistics.model.Variable
 import mongo4cats.circe._
+import java.time.Instant
 
 trait Reader[F[_]]{
   def getVariable(n: GetVariable.Request): F[GetVariable.Response]
@@ -34,8 +35,8 @@ object Reader {
           .all
       } yield (GetVariable.Response(
         request.variableName,
-        Variable.Timestamp(0),
-        Variable.Timestamp(1),
+        Variable.Timestamp(Instant.ofEpochSecond(0)),
+        Variable.Timestamp(Instant.ofEpochSecond(1)),
         variables.toSeq
       ))
     }

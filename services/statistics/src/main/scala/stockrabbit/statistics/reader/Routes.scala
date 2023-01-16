@@ -5,6 +5,7 @@ import cats.implicits._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import stockrabbit.statistics.model.Variable
+import java.time.Instant
 
 object Routes {
 
@@ -21,8 +22,8 @@ object Routes {
       case GET -> Root / "test" =>
         val requestContent = GetVariable.Request(
           Variable.Name("v"), 
-          Some(Variable.Timestamp(0)),
-          Some(Variable.Timestamp(1))
+          Some(Variable.Timestamp(Instant.ofEpochSecond(0))),
+          Some(Variable.Timestamp(Instant.ofEpochSecond(1)))
         )
         (for {
           responseContent <- R.getVariable(requestContent)
