@@ -24,7 +24,7 @@ object GetVariable {
     variableName: Variable.Name,
     startTime: Variable.Timestamp,
     endTime: Variable.Timestamp,
-    value: Seq[Variable]
+    values: Seq[Variable]
   )
   object Response {
     implicit def encoder[F[_]]: EntityEncoder[F, Response] =
