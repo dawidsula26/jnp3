@@ -9,6 +9,7 @@ import cats.implicits._
 import mongo4cats.bson.Document
 import mongo4cats.bson.BsonValue
 import java.time.Instant
+import stockrabbit.statistics.model.Variable
 
 trait Manager[F[_]] {
   def initializeDatabase(): F[Unit]
@@ -19,10 +20,12 @@ trait Manager[F[_]] {
 object Manager {
   def impl[F[_]: Monad](env: Environment[F]): Manager[F] = new Manager[F] {
     def initializeDatabase(): F[Unit] = {
-      val optionsTimeseries = new TimeSeriesOptions("time").metaField("name")
+      val optionsTimeseries = 
+        new TimeSeriesOptions(Variable.Schema.time)
+        .metaField(Variable.Schema.name)
       val optionsCollection = CreateCollectionOptions().timeSeriesOptions(optionsTimeseries)
       val database = env.mongo.database
-      database.createCollection("variables", optionsCollection)
+      database.createCollection(env.mongo.collectionName, optionsCollection)
     }
 
     def removeDatabase(): F[Unit] = {
@@ -34,13 +37,13 @@ object Manager {
       val database = env.mongo.database
 
       val var1 = Document(
-        "name" -> BsonValue.string("v"),
-        "value" -> BsonValue.double(4.8),
-        "time" -> BsonValue.instant(Instant.ofEpochSecond(0))
+        Variable.Schema.name -> BsonValue.string("v"),
+        Variable.Schema.value -> BsonValue.double(4.8),
+        Variable.Schema.time -> BsonValue.instant(Instant.ofEpochSecond(0))
       )
 
       for {
-        collection <- database.getCollection("variables")
+        collection <- database.getCollection(env.mongo.collectionName)
         _ <- collection.insertOne(var1)
       } yield ()
     }

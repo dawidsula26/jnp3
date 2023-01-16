@@ -16,17 +16,17 @@ object Reader {
   def impl[F[_]: Sync](env: Environment[F]): Reader[F] = new Reader[F]{
     def getVariable(request: GetVariable.Request): F[GetVariable.Response] = {
       val database = env.mongo.database
-      val filterName = Filter.eq("name", request.variableName)
+      val filterName = Filter.eq(Variable.Schema.name, request.variableName)
       val filterStartTime = request.startTime match {
-        case Some(t) => Filter.gte("timestamp", t)
+        case Some(t) => Filter.gte(Variable.Schema.time, t)
         case None => Filter.empty
       }
       val filterEndTime = request.endTime match {
-        case Some(t) => Filter.lt("timestamp", t)
+        case Some(t) => Filter.lt(Variable.Schema.time, t)
         case None => Filter.empty
       }
       for {
-        collection <- database.getCollectionWithCodec[Variable]("variables")
+        collection <- database.getCollectionWithCodec[Variable](env.mongo.collectionName)
         variables <- collection
           .withAddedCodec[Variable.Name]
           .withAddedCodec[Variable.Timestamp]

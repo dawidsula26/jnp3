@@ -7,10 +7,16 @@ import io.circe.Encoder
 @JsonCodec case class Variable(
   name: Variable.Name, 
   value: Variable.Value, 
-  timestamp: Variable.Timestamp
+  time: Variable.Timestamp
 )
 
 object Variable {
+  object Schema {
+    val name = "name"
+    val value = "value"
+    val time = "time"
+  }
+
   case class Name(name: String) extends AnyVal
   object Name {
     implicit val decoder = Decoder[String].map(Name(_))
