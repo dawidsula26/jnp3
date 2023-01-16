@@ -12,19 +12,19 @@ object Routes {
     import dsl._
     val basePath = Root / "manager"
     HttpRoutes.of[F] {
-      case GET -> `basePath` / "initializeDatabase" =>
+      case POST -> `basePath` / "initializeDatabase" =>
         for {
           _ <- M.initializeDatabase()
           response <- Ok("initialized")
         } yield (response)
 
-      case GET -> `basePath` / "removeDatabase" =>
+      case POST -> `basePath` / "removeDatabase" =>
         for {
           _ <- M.removeDatabase()
           response <- Ok("removed")
         } yield (response)
 
-      case GET -> `basePath` / "fillWithGarbage" =>
+      case POST -> `basePath` / "fillWithGarbage" =>
         for {
           _ <- M.fillWithGarbage()
           response <- Ok("filled with garbage")
