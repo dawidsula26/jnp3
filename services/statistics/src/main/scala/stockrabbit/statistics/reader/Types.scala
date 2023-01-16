@@ -22,8 +22,6 @@ object GetVariable {
 
   @JsonCodec(encodeOnly = true) case class Response(
     variableName: Variable.Name,
-    startTime: Variable.Timestamp,
-    endTime: Variable.Timestamp,
     values: Seq[Variable]
   )
   object Response {
