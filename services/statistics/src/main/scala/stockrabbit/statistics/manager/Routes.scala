@@ -25,14 +25,10 @@ object Routes {
         } yield (response)
 
       case GET -> `basePath` / "fillWithGarbage" =>
-        (for {
+        for {
           _ <- M.fillWithGarbage()
           response <- Ok("filled with garbage")
-        } yield (response))
-        .handleErrorWith(err =>{
-          print(err)
-          Ok("error")
-        })
+        } yield (response)
     }
   }
 }

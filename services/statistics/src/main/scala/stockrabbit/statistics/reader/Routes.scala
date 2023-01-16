@@ -24,15 +24,10 @@ object Routes {
           None,
           None
         )
-        (for {
+        for {
           responseContent <- R.getVariable(requestContent)
           response <- Ok(responseContent)
-        } yield (response))
-        .handleErrorWith(err => {
-          print(err)
-          err.printStackTrace()
-          Ok("failed")
-        })
+        } yield (response)
     }
   }
 }
