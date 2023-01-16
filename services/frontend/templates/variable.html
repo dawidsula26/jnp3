@@ -45,14 +45,22 @@
                 </div>
         
                 <div class="content">
-                    <h2 class="content-subhead">How to use this layout</h2>
+                    <h1 class="content-subhead"> {{strat_name}} </h1>
+                    <h2 class="content-subhead"> On set: {{set_name}} </h2>
                     <p>
-                        To use this layout, you can just copy paste the HTML, along with the CSS in <a href="/layouts/side-menu/styles.css" alt="Side Menu CSS">side-menu.css</a>, and the JavaScript in <a href="/js/ui.js">ui.js</a>. The JS file uses vanilla JavaScript to simply toggle an <code>active</code> class that makes the menu responsive.
+                        {{strat_desc}}
                     </p>
+                    <div id='chart' class='chart'”></div>
                 </div>
             </div>
         </div>
         
         <script src="/js/ui.js"></script>
     </body>
+
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+    <script type='text/javascript'>
+        var graphs = {{graphJSON | safe}};
+        Plotly.plot('chart',graphs,{});
+    </script>
 </html>
