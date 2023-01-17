@@ -37,8 +37,6 @@ class SerializationTest extends CatsEffectSuite {
   test("should serialize getVariable response") {
     val resp = GetVariable.Response(
       Variable.Name("t"),
-      Variable.Timestamp(Instant.ofEpochSecond(6)),
-      Variable.Timestamp(Instant.ofEpochSecond(25)),
       Seq(
         Variable(Variable.Name("t"), Variable.Value(4.87), Variable.Timestamp(Instant.ofEpochSecond(6))),
         Variable(Variable.Name("t"), Variable.Value(3.125), Variable.Timestamp(Instant.ofEpochSecond(15))),
@@ -55,8 +53,6 @@ class SerializationTest extends CatsEffectSuite {
       ))
     val expectedJson = Json.fromJsonObject(JsonObject(
       "variableName" -> Json.fromString("t"),
-      "startTime" -> Json.fromString("1970-01-01T00:00:06Z"),
-      "endTime" -> Json.fromString("1970-01-01T00:00:25Z"),
       "values" -> Json.fromValues(Seq(
         variableJson("t", 4.87, "1970-01-01T00:00:06Z"),
         variableJson("t", 3.125, "1970-01-01T00:00:15Z"),

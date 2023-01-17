@@ -22,11 +22,8 @@ object StatisticsServer {
     val possibleVersionsMap = SetupVersion.versions.map(v => v.name -> v).toMap
     for {
       env <- IO(sys.env)
-      _ <- IO(env.foreach(Console.println(_)))
-      _ <- IO(Console.println(env.get("SETUP_VERSION")))
-      versionName <- IO(env.get(SetupVersion.setupVersionVariableName).get)
-      _ <- IO(Console.println(possibleVersionsMap))
-      _ <- IO(Console.println(versionName))
+      versionNameOption <- IO(env.get(SetupVersion.setupVersionVariableName))
+      versionName = versionNameOption.getOrElse(SetupVersion.Local.name)
       version = possibleVersionsMap.get(versionName).get
     } yield (version)
   }
