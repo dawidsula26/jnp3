@@ -7,10 +7,13 @@ import fs2.kafka.ConsumerSettings
 import fs2.kafka.ProducerSettings
 import fs2.kafka._
 import fs2.Stream
+import stockrabbit.statistics.model.Variable
+import org.apache.kafka.common.{serialization => ser}
+import nequi.circe.kafka._
 
 trait EnvKafka[F[_]] {
-  def inputTopic: KafkaConsumer[F, String, String]
-  def backfeedTopic[K, V](implicit a: Serializer[F, K], b: Serializer[F, V]): Stream[F, (K, V)] => Stream[F, ProducerResult[Unit, K, V]]
+  def inputTopic: KafkaConsumer[F, String, Variable]
+  def backfeedTopic: Stream[F, (String, Variable)] => Stream[F, ProducerResult[Unit, String, Variable]]
 }
 
 object EnvKafka {
@@ -49,11 +52,15 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
   }
 
   def build: Resource[F, EnvKafka[F]] = {
+    implicit val variableSerializer = Serializer.delegate(implicitly[ser.Serializer[Variable]])
+    implicit val variableDeserializer = Deserializer.delegate(implicitly[ser.Deserializer[Variable]])
+
     for {
-      input <- makeConsumerTopic[String, String](config.inputTopic)
+      input <- makeConsumerTopic[String, Variable](config.inputTopic)
+      backfeed = makeProducerTopic[String, Variable](config.backfeedTopic)
     } yield (new EnvKafka[F] {
       def inputTopic = input
-      def backfeedTopic[K, V](implicit a: Serializer[F, K], b: Serializer[F, V]) = makeProducerTopic[K, V](config.backfeedTopic)
+      def backfeedTopic = backfeed
     })
   }
 }

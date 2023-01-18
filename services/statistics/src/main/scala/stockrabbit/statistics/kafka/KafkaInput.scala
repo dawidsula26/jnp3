@@ -1,22 +1,28 @@
 package stockrabbit.statistics.kafka
 
-import fs2.Stream
 import fs2.kafka.CommittableConsumerRecord
 import cats.effect._
 import stockrabbit.statistics.environment.general.Environment
+import stockrabbit.statistics.model.Variable
+import stockrabbit.statistics.mongo.VariableCollection
 
 class KafkaInput(env: Environment[IO]) {
-  def processRecord(record: CommittableConsumerRecord[IO, String, String]): IO[Unit] = {
-    IO.blocking(println(record.record.value))
-  }
+  def processRecord(
+    collection: VariableCollection[IO], 
+    record: CommittableConsumerRecord[IO, String, Variable]
+  ): IO[Unit] = for {
+    _ <- IO.blocking(println(record.record.key))
+    _ <- IO.blocking(println(record.record.value))
+    _ <- collection.insert(Seq(record.record.value))
+  } yield ()
 
-  def run(): IO[Unit] = {
-    val values = Seq(("key", "value"), ("a", "b"), ("just", "strings"))
-    Stream.iterable(values)
-      .evalTap(v => IO.blocking(println(s"Sending ${v._1} -> ${v._2}")))
-      .through(env.kafka.backfeedTopic)
+  def run(): IO[Unit] = for {
+    variableCollection <- VariableCollection.get(env.mongo.database)
+    _ <- env.kafka.inputTopic
+      .records
+      .evalMap(processRecord(variableCollection, _))
       .compile.drain
-  }
+  } yield ()
 }
 
 object KafkaInput {
