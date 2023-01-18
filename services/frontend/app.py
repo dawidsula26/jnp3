@@ -6,6 +6,7 @@ import plotly
 import plotly.express as px
 import redis
 import random
+import requests
 from datetime import datetime
 from flask import Flask,\
                   render_template,\
@@ -31,11 +32,19 @@ app.config['SECRET_KEY'] = "2a7c9ef01952a238eb"
 #             retries -= 1
 #             time.sleep(0.5)
 
+STATISTICS_URL = 'https://localhost:8080'
+
 def get_variable_values(variable_name,
                         selected_set,
                         date_begin,
                         date_end):
    print(date_begin)
+
+   data = {'variableName': 'v', 'startTime': None, 'endTime': None}
+   r = requests.post(url = STATISTICS_URL + '/reader/getVariable', data = data) 
+   response = r.json()
+   print(response)
+
    date_series = pd.date_range(datetime.strptime(date_begin, '%Y-%m-%d'),
                                datetime.strptime(date_end, '%Y-%m-%d'))
    
