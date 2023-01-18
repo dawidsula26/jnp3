@@ -10,16 +10,11 @@ object Routes {
   def routes[F[_]: Concurrent](R: Reader[F]): HttpRoutes[F] = {
     val dsl = new Http4sDsl[F]{}
     import dsl._
+    val basePath = Root / "reader"
     HttpRoutes.of[F] {
-      case request @ POST -> Root / "test" =>
+      case request @ POST -> `basePath` / "getVariable" =>
         for {
           requestContent <- request.as[GetVariable.Request]
-          responseContent <- R.getVariable(requestContent)
-          response <- Ok(responseContent)
-        } yield (response)
-      case GET -> Root / "test" =>
-        val requestContent = GetVariable.Request("t")
-        for {
           responseContent <- R.getVariable(requestContent)
           response <- Ok(responseContent)
         } yield (response)
