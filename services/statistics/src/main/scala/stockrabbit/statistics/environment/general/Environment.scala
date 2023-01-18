@@ -2,12 +2,14 @@ package stockrabbit.statistics.environment.general
 
 import stockrabbit.statistics.environment.kafka.EnvKafka
 import stockrabbit.statistics.environment.mongo.EnvMongo
+import stockrabbit.statistics.environment.server.EnvServer
 
 import cats.effect._
 
 trait Environment[F[_]] {
   def mongo: EnvMongo[F]
   def kafka: EnvKafka[F]
+  def server: EnvServer[F]
 }
 
 object Environment {
@@ -15,9 +17,11 @@ object Environment {
     for {
       envKafka <- EnvKafka.impl[F](config.kafka)
       envMongo <- EnvMongo.impl[F](config.mongo)
+      envServer <- EnvServer.impl[F](config.server)
     } yield (new Environment[F]{
-      def mongo: EnvMongo[F] = envMongo
-      def kafka: EnvKafka[F] = envKafka
+      def mongo = envMongo
+      def kafka = envKafka
+      def server = envServer
     })
   }
 }
