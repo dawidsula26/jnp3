@@ -52,8 +52,10 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   kafka-init:
-    build:
-      context: ./kafka/init
+    image: confluentinc/cp-kafka:7.3.0
     container_name: kafka-init
     depends_on:
       - kafka
+    command: "bash -c 'sh /init/start.sh'"
+    volumes:
+      - ./kafka:/init
