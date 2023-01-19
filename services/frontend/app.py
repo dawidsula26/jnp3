@@ -1,5 +1,3 @@
-import time
-
 import pandas as pd
 import json
 import plotly
@@ -7,6 +5,7 @@ import plotly.express as px
 import redis
 import random
 import requests
+import yaml
 from datetime import datetime
 from flask import Flask,\
                   render_template,\
@@ -32,37 +31,40 @@ app.config['SECRET_KEY'] = "2a7c9ef01952a238eb"
 #             retries -= 1
 #             time.sleep(0.5)
 
-STATISTICS_URL = 'https://localhost:8080'
+STATISTICS_URL = 'http://statistics:8080'
+
+def get_available_strategies():
+   f = open('config.yaml')
+   service_config = yaml.load(f)
+
+   strategies_sets = service_config['available_strategies']
+   return strategies_sets
+
 
 def get_variable_values(variable_name,
-                        selected_set,
                         date_begin,
                         date_end):
-   print(date_begin)
-
-   data = {'variableName': 'v', 'startTime': None, 'endTime': None}
-   r = requests.post(url = STATISTICS_URL + '/reader/getVariable', data = data) 
+   data = {'variableName': variable_name,
+           'startTime': None,
+           'endTime': None}
+   r = requests.post(url = STATISTICS_URL + '/reader/getVariable', json = data) 
    response = r.json()
-   print(response)
-
-   date_series = pd.date_range(datetime.strptime(date_begin, '%Y-%m-%d'),
-                               datetime.strptime(date_end, '%Y-%m-%d'))
-   
-   values = [0]
-   for _ in range(len(date_series) - 1):
-      today_value = random.uniform(-1.7, 2)
-      values.append(values[-1] + today_value)
+   values = response['values']
+   print(values)
 
    df = pd.DataFrame({
-      'Date': date_series,
-      'USD': values,
+      'Date': [v['time'] for v in values],
+      'USD': [v['value'] for v in values]
    })
    return df
+
 
 # Dashboard
 @app.route('/', methods=['GET'])
 def index():
-   return render_template('index.html')
+   strategies_sets = get_available_strategies()
+   return render_template('index.html', strats=strategies_sets)
+
 
 # specific variable
 @app.route('/variable', methods=['GET', 'POST'])
@@ -75,14 +77,16 @@ def variable():
    else:
       return redirect('/')
 
-   df = get_variable_values(selected_strategy, selected_set, date_begin, date_end)
+   df = get_variable_values(selected_strategy, date_begin, date_end)
    fig = px.line(df, x='Date', y='USD')
    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-   return render_template('variable.html', graphJSON=graphJSON,
+   strategies_sets = get_available_strategies()
+   return render_template('variable.html', strats=strategies_sets,
+                                           graphJSON=graphJSON,
                                            strat_name=selected_strategy,
                                            set_name=selected_set,
-                                           strat_desc='Easy strategy for buying a stock when its price is higher than last week')
+                                           strat_desc='DESCRIPTION')
       
 
 if __name__ == "__main__":

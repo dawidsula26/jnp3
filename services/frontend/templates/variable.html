@@ -16,17 +16,12 @@
 
                     <form class="pure-form pure-form-stacked" style="margin-left: 30px; margin-top: 30px;" method="POST" action="/variable">
                         <fieldset>
-                            <label for="selected_strategy"> Strategy: </label>
+                            <label for="selected_strategy"> Strategy@Set: </label>
+                            
                             <select id="selected_strategy" name="selected_strategy" required>
-                                <option>Buy lower than mean, sell higher (week)</option>
-                                <option>Strategy for economics nerds</option>
-                                <option>Buy lower than mean, sell higher (year)</option>
-                            </select>
-                            <label for="selected_set"> Stock set: </label>
-                            <select id="selected_set" name="selected_set" required>
-                                <option>All</option>
-                                <option>WIG20</option>
-                                <option>S&P500</option>
+                                {%for s_name in strats%}     
+                                    <option> {{s_name}} </option>
+                                {%endfor%}
                             </select>
                             <label for="date_begin">From:</label>
                             <input type="date" id="date_begin" name="date_begin" value="2022-01-01" required/>
