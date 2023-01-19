@@ -5,7 +5,7 @@ import stockrabbit.statistics.environment.general.Address
 case class ConfigKafka(
   address: Address,
 
-  inputTopic: Topic,
+  processedTopic: Topic,
   backfeedTopic: Topic
 )
 

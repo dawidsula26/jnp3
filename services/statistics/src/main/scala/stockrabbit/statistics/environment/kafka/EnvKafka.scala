@@ -10,10 +10,12 @@ import fs2.Stream
 import stockrabbit.statistics.model.Variable
 import org.apache.kafka.common.{serialization => ser}
 import nequi.circe.kafka._
+import io.circe.parser._
+import io.circe.syntax._
 
 trait EnvKafka[F[_]] {
-  def inputTopic: KafkaConsumer[F, String, String]
-  def backfeedTopic: Stream[F, (String, String)] => Stream[F, ProducerResult[Unit, String, String]]
+  def processedTopic: Stream[F, Variable]
+  def backfeedTopic: Stream[F, Variable] => Stream[F, ProducerResult[Unit, String, String]]
 }
 
 object EnvKafka {
@@ -32,7 +34,8 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
       .evalTap(_.subscribeTo(topic.name))
   }
 
-  def makeProducerTopic[K, V](topic: Topic)(implicit a: Serializer[F, K], b: Serializer[F, V]) = {
+  def makeProducerTopic[K, V](topic: Topic)(implicit a: Serializer[F, K], b: Serializer[F, V]):
+    Stream[F, (K, V)] => Stream[F, ProducerResult[Unit, K, V]] = {
     def valueWrapper(t: (K, V)): ProducerRecords[Unit, K, V] = {
       val record = ProducerRecord(topic.name, t._1, t._2) 
       ProducerRecords.one(record)
@@ -51,6 +54,27 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
     stream => processStream(stream)
   }
 
+  def makeProcessedTopic: Resource[F, Stream[F, Variable]] = {
+    for {
+      consumer <- makeConsumerTopic[Unit, String](config.processedTopic)
+      variables = consumer.records
+        .map(record => parse(record.record.value))
+        .map(_.toOption.get)
+        .map(_.as[Variable])
+        .map(_.toOption.get)
+    } yield (variables)
+  }
+
+  def makeBackfeedTopic: Stream[F, Variable] => Stream[F, ProducerResult[Unit, String, String]] = {
+    def processStream(stream: Stream[F, Variable]): Stream[F, ProducerResult[Unit, String, String]] = {
+      val variableWithNameStream = stream.map(v => (v.name, v))
+      val stringStream = variableWithNameStream.map(v => (v._1.name, v._2.asJson.noSpaces))
+      stringStream.through(makeProducerTopic[String, String](config.backfeedTopic))
+    }
+    stream => processStream(stream)
+  }
+
+
   def build: Resource[F, EnvKafka[F]] = {
     implicit val variableSerializer = Serializer.delegate(implicitly[ser.Serializer[Variable]])
     implicit val variableDeserializer = Deserializer.delegate(implicitly[ser.Deserializer[Variable]])
@@ -58,10 +82,10 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
     println(variableDeserializer)
 
     for {
-      input <- makeConsumerTopic[String, String](config.inputTopic)
-      backfeed = makeProducerTopic[String, String](config.backfeedTopic)
+      input <- makeProcessedTopic
+      backfeed = makeBackfeedTopic
     } yield (new EnvKafka[F] {
-      def inputTopic = input
+      def processedTopic = input
       def backfeedTopic = backfeed
     })
   }
