@@ -6,7 +6,21 @@ kafka-topics --bootstrap-server kafka:9092 \
              --if-not-exists \
              --partitions 1 \
              --replication-factor 1 \
-             --topic toStatisticsTest
+             --topic processedTest
+
+kafka-topics --bootstrap-server kafka:9092 \
+             --create \
+             --if-not-exists \
+             --partitions 1 \
+             --replication-factor 1 \
+             --topic inputTest
+
+kafka-topics --bootstrap-server kafka:9092 \
+             --create \
+             --if-not-exists \
+             --partitions 1 \
+             --replication-factor 1 \
+             --topic backfeedTest
 
 
 kafka-topics --bootstrap-server kafka:9092 \
@@ -14,39 +28,21 @@ kafka-topics --bootstrap-server kafka:9092 \
              --if-not-exists \
              --partitions 1 \
              --replication-factor 1 \
-             --topic fromStatisticsTest
-
-
-kafka-topics --bootstrap-server kafka:9092 \
-             --create \
-             --if-not-exists \
-             --partitions 1 \
-             --replication-factor 1 \
-             --topic toStatisticsProd
-
+             --topic processedProd
 
 kafka-topics --bootstrap-server kafka:9092 \
              --create \
              --if-not-exists \
              --partitions 1 \
              --replication-factor 1 \
-             --topic fromStatisticsProd
-
-
-kafka-topics --bootstrap-server kafka:9092 \
-             --create \
-             --if-not-exists \
-             --partitions 1 \
-             --replication-factor 1 \
-             --topic toCalculationsTest
-
+             --topic inputProd
 
 kafka-topics --bootstrap-server kafka:9092 \
              --create \
              --if-not-exists \
              --partitions 1 \
              --replication-factor 1 \
-             --topic toCalculationsProd
+             --topic backfeedProd
 
 
 echo Created topics
