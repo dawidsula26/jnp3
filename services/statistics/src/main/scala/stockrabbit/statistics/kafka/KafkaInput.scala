@@ -5,15 +5,19 @@ import cats.effect._
 import stockrabbit.statistics.environment.general.Environment
 import stockrabbit.statistics.model.Variable
 import stockrabbit.statistics.mongo.VariableCollection
+import scala.annotation.unused
+import io.circe.parser._
 
 class KafkaInput(env: Environment[IO]) {
   def processRecord(
     collection: VariableCollection[IO], 
-    record: CommittableConsumerRecord[IO, String, Variable]
+    record: CommittableConsumerRecord[IO, String, String]
   ): IO[Unit] = for {
-    _ <- IO.blocking(println(record.record.key))
-    _ <- IO.blocking(println(record.record.value))
-    _ <- collection.insert(Seq(record.record.value))
+    variableJson = parse(record.record.value)
+    variableParsed = variableJson.toOption.get.as[Variable]
+    variable = variableParsed.toOption.get
+    _ <- IO.blocking(println(variable))
+    _ <- collection.insert(Seq(variable))
   } yield ()
 
   def run(): IO[Unit] = for {

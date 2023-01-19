@@ -12,8 +12,8 @@ import org.apache.kafka.common.{serialization => ser}
 import nequi.circe.kafka._
 
 trait EnvKafka[F[_]] {
-  def inputTopic: KafkaConsumer[F, String, Variable]
-  def backfeedTopic: Stream[F, (String, Variable)] => Stream[F, ProducerResult[Unit, String, Variable]]
+  def inputTopic: KafkaConsumer[F, String, String]
+  def backfeedTopic: Stream[F, (String, String)] => Stream[F, ProducerResult[Unit, String, String]]
 }
 
 object EnvKafka {
@@ -54,10 +54,12 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
   def build: Resource[F, EnvKafka[F]] = {
     implicit val variableSerializer = Serializer.delegate(implicitly[ser.Serializer[Variable]])
     implicit val variableDeserializer = Deserializer.delegate(implicitly[ser.Deserializer[Variable]])
+    println(variableSerializer)
+    println(variableDeserializer)
 
     for {
-      input <- makeConsumerTopic[String, Variable](config.inputTopic)
-      backfeed = makeProducerTopic[String, Variable](config.backfeedTopic)
+      input <- makeConsumerTopic[String, String](config.inputTopic)
+      backfeed = makeProducerTopic[String, String](config.backfeedTopic)
     } yield (new EnvKafka[F] {
       def inputTopic = input
       def backfeedTopic = backfeed
