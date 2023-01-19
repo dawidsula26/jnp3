@@ -5,7 +5,6 @@ import cats.effect._
 import stockrabbit.statistics.environment.general.Environment
 import stockrabbit.statistics.model.Variable
 import stockrabbit.statistics.mongo.VariableCollection
-import scala.annotation.unused
 import io.circe.parser._
 
 class KafkaInput(env: Environment[IO]) {
@@ -13,8 +12,12 @@ class KafkaInput(env: Environment[IO]) {
     collection: VariableCollection[IO], 
     record: CommittableConsumerRecord[IO, String, String]
   ): IO[Unit] = for {
+    _ <- IO.blocking(println(record.record.key))
+    _ <- IO.blocking(println(record.record.value))
     variableJson = parse(record.record.value)
+    _ <- IO.blocking(println(variableJson))
     variableParsed = variableJson.toOption.get.as[Variable]
+    _ <- IO.blocking(println(variableParsed))
     variable = variableParsed.toOption.get
     _ <- IO.blocking(println(variable))
     _ <- collection.insert(Seq(variable))
