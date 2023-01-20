@@ -1,2 +1,7 @@
 flask
 redis
+plotly
+pandas
+datetime
+requests
+pyyaml==5.4.1

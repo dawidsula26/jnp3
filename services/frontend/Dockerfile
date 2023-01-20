@@ -7,6 +7,8 @@ WORKDIR /python-docker
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
+COPY config.yaml config.yaml
+
 ENV FLASK_RUN_HOST=0.0.0.0
 EXPOSE 3000
 

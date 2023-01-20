@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="header">
+        <h1>StockRabbit 🐇</h1>
+        <h2>Stock Market Simulation Tool</h2>
+    </div>
+
+    <div class="content">
+        <h1 class="content-subhead"> {{strat_name}} </h1>
+        <h2 class="content-subhead"> On set: {{set_name}} </h2>
+        <p>
+            {{strat_desc}}
+        </p>
+        <div id='chart' class='chart'></div>
+
+        <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+        <script type='text/javascript'>
+            var graphs = {{ graphJSON | safe }};
+            Plotly.plot('chart',graphs,{});
+        </script>
+    </div>
+{% endblock %}
+

@@ -1,12 +1,14 @@
-<html>
-    <head>
-        <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v3.0.1/dist/mini-default.min.css">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-        <title>StockRabbit</title>
-    </head>
-    <body>
-        <div id="root">
-            Service Test. This website was seen {{hits}} times.
-        </div>
-    </body>
-</html>
+{% extends "layout.html" %}
+{% block content %}
+    <div class="header">
+        <h1>StockRabbit 🐇</h1>
+        <h2>Stock Market Simulation Tool</h2>
+    </div>
+
+    <div class="content">
+        <h2 class="content-subhead">How to use this layout</h2>
+        <p>
+            To use this layout, you can just copy paste the HTML, along with the CSS in <a href="/layouts/side-menu/styles.css" alt="Side Menu CSS">side-menu.css</a>, and the JavaScript in <a href="/js/ui.js">ui.js</a>. The JS file uses vanilla JavaScript to simply toggle an <code>active</code> class that makes the menu responsive.
+        </p>
+    </div>
+{% endblock %}
