@@ -15,6 +15,9 @@ import pureconfig._
 import pureconfig.generic.auto._
 import scala.io.Source
 import stockrabbit.statistics.environment.general.SetupVersion
+import org.http4s.server.Server
+import scala.annotation.unused
+import stockrabbit.statistics.kafka.KafkaInput
 
 object StatisticsServer {
 
@@ -28,50 +31,61 @@ object StatisticsServer {
     } yield (version)
   }
 
-  def getConfig(setupVersion: SetupVersion): IO[Config] = {
-    val mainConfigFileSource = IO(Source.fromResource(setupVersion.configFileName))
+  def makeConfig(setupVersion: SetupVersion): IO[Config] = {
+    val mainConfigFileSource = IO.blocking(Source.fromResource(setupVersion.configFileName))
     val mainConfigResource = Resource.make(mainConfigFileSource)(src => IO(src.close()))
 
-    val defaultConfigFileSource = IO(Source.fromResource(setupVersion.backupFileName))
+    val defaultConfigFileSource = IO.blocking(Source.fromResource(setupVersion.backupFileName))
     val defaultConfigResource = Resource.make(defaultConfigFileSource)(src => IO(src.close()))
     for {
-      mainConfigString <- mainConfigResource.use(src => IO(src.getLines().mkString("\n")))
+      mainConfigString <- mainConfigResource.use(src => IO.blocking(src.getLines().mkString("\n")))
       mainConfigSource = ConfigSource.string(mainConfigString)
 
-      defaultConfigString <- defaultConfigResource.use(src => IO(src.getLines().mkString("\n")))
+      defaultConfigString <- defaultConfigResource.use(src => IO.blocking(src.getLines().mkString("\n")))
       defaultConfigSource = ConfigSource.string(defaultConfigString)
 
       config = mainConfigSource.withFallback(defaultConfigSource).loadOrThrow[Config]
     } yield (config)
   }
 
-  def getResources[F[_]: Async](config: Config): F[Nothing] = {
-    val resources = for {
-      env <- Environment.impl(config)
+  def makeEnv[F[_]: Async](config: Config): Resource[F, Environment[F]] = {
+    Environment.impl[F](config)
+  }
 
-      readerAlg = Reader.impl[F](env)
-      managerAlg = Manager.impl[F](env)
+  def makeServer[F[_]: Async](env: Environment[F]): Resource[F, Server] = {
+    val readerAlg = Reader.impl[F](env)
+    val managerAlg = Manager.impl[F](env)
 
-      httpApp = (
+    val httpApp = (
+      reader.Routes.routes[F](readerAlg) <+> 
         reader.Routes.routes[F](readerAlg) <+> 
-        manager.Routes.routes[F](managerAlg)
-      ).orNotFound
-      finalHttpApp = Logger.httpApp(true, true)(httpApp)
+      reader.Routes.routes[F](readerAlg) <+> 
+      manager.Routes.routes[F](managerAlg)
+    ).orNotFound
+    val finalHttpApp = Logger.httpApp(true, true)(httpApp)
       
-      _ <- 
-        EmberServerBuilder.default[F]
-          .withHost(ipv4"0.0.0.0")
-          .withPort(port"8080")
-          .withHttpApp(finalHttpApp)
-          .build
+    EmberServerBuilder.default[F]
+      .withHost(ipv4"0.0.0.0")
+      .withPort(Port.fromInt(env.server.port).get)
+      .withHttpApp(finalHttpApp)
+      .build
+  }
+
+  def makeKafka(@unused env: Environment[IO]): IO[Unit] = {
+    for {
+      _ <- KafkaInput.run(env).start
     } yield ()
-    resources.useForever
   }
 
   def run: IO[Nothing] = {
-    implicit val asyncForIO = IO.asyncForIO
-    val setupVersion = getSetupVersion()
-    val config = setupVersion.flatMap(getConfig(_))
-    config.flatMap(getResources(_))
+    implicit val ioAsync = IO.asyncForIO
+    val resources = for {
+      setupVersion <- Resource.eval(getSetupVersion())
+      config <- Resource.eval(makeConfig(setupVersion))
+      env <- makeEnv(config)
+      _ <- makeServer(env)
+      _ <- Resource.eval(makeKafka(env))
+    } yield ()
+    resources.useForever
   }
 }
