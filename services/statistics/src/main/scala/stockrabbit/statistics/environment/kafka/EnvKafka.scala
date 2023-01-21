@@ -8,8 +8,6 @@ import fs2.kafka.ProducerSettings
 import fs2.kafka._
 import fs2.Stream
 import stockrabbit.statistics.model.Variable
-import org.apache.kafka.common.{serialization => ser}
-import nequi.circe.kafka._
 import io.circe.parser._
 import io.circe.syntax._
 
@@ -76,11 +74,6 @@ private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
 
 
   def build: Resource[F, EnvKafka[F]] = {
-    implicit val variableSerializer = Serializer.delegate(implicitly[ser.Serializer[Variable]])
-    implicit val variableDeserializer = Deserializer.delegate(implicitly[ser.Deserializer[Variable]])
-    println(variableSerializer)
-    println(variableDeserializer)
-
     for {
       input <- makeProcessedTopic
       backfeed = makeBackfeedTopic
