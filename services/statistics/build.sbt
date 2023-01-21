@@ -8,7 +8,10 @@ val PureConfigVersion = "0.17.2"
 val FS2KafkaVersion = "3.0.0-M8"
 val CirceKafkaVersion = "2.7.0"
 
+lazy val someLib = ProjectRef(file("../scala-common"), "common")
+
 lazy val root = (project in file("."))
+  .dependsOn(someLib)
   .settings(
     organization := "stockrabbit",
     name := "statistics",

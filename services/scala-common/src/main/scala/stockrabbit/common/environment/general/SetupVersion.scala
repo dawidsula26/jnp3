@@ -1,4 +1,4 @@
-package stockrabbit.statistics.environment.general
+package stockrabbit.common.environment.general
 
 import cats.effect._
 

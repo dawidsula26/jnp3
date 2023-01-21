@@ -1,15 +1,12 @@
 package stockrabbit.statistics.environment.kafka
 
-import stockrabbit.statistics.environment.general.Address
+import stockrabbit.common.environment.general.Address
+import stockrabbit.common.environment.kafka.Topic
+import stockrabbit.common.environment.{kafka => common}
 
 case class ConfigKafka(
   address: Address,
 
   processedTopic: Topic,
   backfeedTopic: Topic
-)
-
-case class Topic (
-  name: String,
-  consumerGroup: String
-)
+) extends common.ConfigKafka

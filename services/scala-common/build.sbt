@@ -8,7 +8,7 @@ val PureConfigVersion = "0.17.2"
 val FS2KafkaVersion = "3.0.0-M8"
 val CirceKafkaVersion = "2.7.0"
 
-lazy val root = (project in file("."))
+lazy val common = (project in file("."))
   .settings(
     organization := "stockrabbit",
     name := "common",

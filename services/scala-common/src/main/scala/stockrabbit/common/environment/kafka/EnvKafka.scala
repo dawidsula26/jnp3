@@ -1,4 +1,4 @@
-package stockrabbit.statistics.environment.kafka
+package stockrabbit.common.environment.kafka
 
 import cats.effect._
 import fs2.kafka._

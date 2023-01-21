@@ -1,4 +1,4 @@
-package stockrabbit.statistics.model
+package stockrabbit.common.model
 
 import io.circe.generic.JsonCodec
 import io.circe.Decoder

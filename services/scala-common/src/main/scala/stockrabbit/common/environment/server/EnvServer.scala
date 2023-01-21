@@ -1,4 +1,4 @@
-package stockrabbit.statistics.environment.server
+package stockrabbit.common.environment.server
 
 import cats.effect._
 
