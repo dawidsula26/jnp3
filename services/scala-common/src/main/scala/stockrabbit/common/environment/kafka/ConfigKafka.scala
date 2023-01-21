@@ -6,7 +6,11 @@ trait ConfigKafka{
   def address: Address
 }
 
-case class Topic(
+case class InputTopic(
   name: String,
   consumerGroup: String
+)
+
+case class OutputTopic(
+  name: String
 )

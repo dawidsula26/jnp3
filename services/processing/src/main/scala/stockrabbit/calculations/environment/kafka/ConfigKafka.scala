@@ -1,4 +1,4 @@
-package stockrabbit.statistics.environment.kafka
+package stockrabbit.calculations.environment.kafka
 
 import stockrabbit.common.environment.general.Address
 import stockrabbit.common.environment.kafka.InputTopic
@@ -8,6 +8,7 @@ import stockrabbit.common.environment.{kafka => common}
 case class ConfigKafka(
   address: Address,
 
-  processedTopic: InputTopic,
-  backfeedTopic: OutputTopic
+  processedTopic: OutputTopic,
+  backfeedTopic: InputTopic,
+  inputTopic: InputTopic
 ) extends common.ConfigKafka

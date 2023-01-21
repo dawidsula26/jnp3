@@ -10,7 +10,7 @@ import io.circe.syntax._
 
 object EnvKafka {
   private def consumerTopicImpl[F[_]: Async, K, V]
-    (config: ConfigKafka, topic: Topic)
+    (config: ConfigKafka, topic: InputTopic)
     (implicit a: Deserializer[F, K], b: Deserializer[F, V]): 
       Resource[F, KafkaConsumer[F, K, V]] = 
   {
@@ -23,7 +23,7 @@ object EnvKafka {
   }
 
   def consumerTopic[F[_]: Async, V: Decoder]
-    (config: ConfigKafka, topic: Topic): 
+    (config: ConfigKafka, topic: InputTopic): 
       Resource[F, Stream[F, V]] = 
   {
     for {
@@ -38,7 +38,7 @@ object EnvKafka {
 
 
   private def producerTopicImpl[F[_]: Async, K, V]
-    (config: ConfigKafka, topic: Topic)
+    (config: ConfigKafka, topic: OutputTopic)
     (implicit a: Serializer[F, K], b: Serializer[F, V]):
       Stream[F, (K, V)] => Stream[F, ProducerResult[Unit, K, V]] = 
   {
@@ -61,7 +61,7 @@ object EnvKafka {
   }
 
   def producerTopic[F[_]: Async, K: Encoder, V: Encoder]
-    (config: ConfigKafka, topic: Topic, key: V => K)
+    (config: ConfigKafka, topic: OutputTopic, key: V => K)
     (stream: Stream[F, V]): 
       Stream[F, ProducerResult[Unit, String, String]] = 
   {

@@ -20,6 +20,20 @@ services:
     environment:
       SETUP_VERSION: "dockerTest"
 
+  calculations:
+    build:
+      context: ./calculations
+    depends_on:
+      - kafka-init
+    ports:
+      - "8081:8080"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      SETUP_VERSION: "dockerTest"
+
   redis:
     image: "redis:alpine"
 
