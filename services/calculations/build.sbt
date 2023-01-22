@@ -19,6 +19,7 @@ lazy val root = (project in file("."))
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.10",
     scalacOptions += "-Ymacro-annotations",
+    scalacOptions += "-Ywarn-macros:after",
     libraryDependencies ++= Seq(
       "org.http4s"            %% "http4s-ember-server"       % Http4sVersion,
       "org.http4s"            %% "http4s-ember-client"       % Http4sVersion,

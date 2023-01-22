@@ -10,7 +10,7 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
 import org.http4s.server.Server
-import stockrabbit.calculations.kafka.KafkaProcessor
+import stockrabbit.calculations.kafka.Process
 import stockrabbit.common.environment.general.SetupVersion
 
 object StatisticsServer {
@@ -36,7 +36,7 @@ object StatisticsServer {
       config <- Resource.eval(Config.impl(setupVersion))
       env <- Environment.impl(config)
       _ <- makeServer(env)
-      _ <- KafkaProcessor.run(env)
+      _ <- Process.run(env)
     } yield ()
     resources.useForever
   }
