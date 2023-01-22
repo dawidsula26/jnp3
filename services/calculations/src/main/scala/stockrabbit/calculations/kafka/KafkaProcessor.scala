@@ -22,9 +22,6 @@ class KafkaProcessor(env: Environment[IO]) {
       .mapValues{processRecord(_)}
       .to(env.kafka.processedTopic(_))
     
-    env.kafka.inputTopic(builder)
-      .pro
-
     print(a)
     IO.pure(())
   }
