@@ -6,9 +6,10 @@ import mongo4cats.database.MongoDatabase
 import cats._
 import cats.implicits._
 import com.mongodb.client.model.TimeSeriesOptions
-import stockrabbit.statistics.model.Variable
 import mongo4cats.models.database.CreateCollectionOptions
 import mongo4cats.operations
+import stockrabbit.common.model.variable._
+import stockrabbit.statistics.mongo.Serialization._
 
 class VariableCollection[F[_]](collection: MongoCollection[F, Document]) {
   def insert(xs: Seq[Variable]) =
@@ -40,19 +41,19 @@ object VariableCollection {
   
   case class Filter private(filter: operations.Filter)
   object Filter {
-    def eq(name: Variable.Name): Filter = 
+    def eq(name: Name): Filter = 
       Filter(operations.Filter.eq(Variable.Schema.name, name.bson))
-    def eq(time: Variable.Timestamp): Filter = 
+    def eq(time: Timestamp): Filter = 
       Filter(operations.Filter.eq(Variable.Schema.time, time.bson))
 
-    def gte(time: Variable.Timestamp): Filter =
+    def gte(time: Timestamp): Filter =
       Filter(operations.Filter.gte(Variable.Schema.time, time.bson))
-    def gt(time: Variable.Timestamp): Filter = 
+    def gt(time: Timestamp): Filter = 
       Filter(operations.Filter.gt(Variable.Schema.time, time.bson))
     
-    def lte(time: Variable.Timestamp): Filter =
+    def lte(time: Timestamp): Filter =
       Filter(operations.Filter.lte(Variable.Schema.time, time.bson))
-    def lt(time: Variable.Timestamp): Filter = 
+    def lt(time: Timestamp): Filter = 
       Filter(operations.Filter.lt(Variable.Schema.time, time.bson))
 
     def empty: Filter = Filter(operations.Filter.empty)

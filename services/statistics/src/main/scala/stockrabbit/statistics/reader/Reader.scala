@@ -4,8 +4,8 @@ import stockrabbit.statistics.environment.general.Environment
 
 import cats.effect._
 import cats.implicits._
-import stockrabbit.statistics.model.Variable
 import stockrabbit.statistics.mongo.VariableCollection
+import stockrabbit.statistics.mongo.Serialization._
 
 trait Reader[F[_]]{
   def getVariable(n: GetVariable.Request): F[GetVariable.Response]
@@ -29,7 +29,7 @@ object Reader {
         variables <- collection.find(Seq(filterName, filterStartTime, filterEndTime)).all
       } yield (GetVariable.Response(
         request.variableName,
-        variables.toSeq.map(Variable.fromDocument(_))
+        variables.toSeq.map(VariableDocument.fromDocument(_))
       ))
     }
   }

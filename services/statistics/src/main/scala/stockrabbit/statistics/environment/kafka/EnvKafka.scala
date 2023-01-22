@@ -1,14 +1,14 @@
 package stockrabbit.statistics.environment.kafka
 
-import stockrabbit.statistics.model.Variable
 import stockrabbit.common.environment.{kafka => common}
 import org.apache.kafka.streams.scala.kstream._
 import org.apache.kafka.streams.scala._
 import stockrabbit.common.environment.general.Address
+import stockrabbit.common.model.variable._
 
 trait EnvKafka extends common.EnvKafka {
-  def processedTopic(builder: StreamsBuilder): KStream[String, Variable]
-  def backfeedTopic(stream: KStream[String, Variable]): Unit
+  def processedTopic(builder: StreamsBuilder): KStream[Name, Variable]
+  def backfeedTopic(stream: KStream[Name, Variable]): Unit
 }
 
 object EnvKafka {
@@ -18,11 +18,11 @@ object EnvKafka {
 
       protected def consumerGroup: String = config.consumerGroup
 
-      def processedTopic(builder: StreamsBuilder): KStream[String,Variable] = 
+      def processedTopic(builder: StreamsBuilder): KStream[Name,Variable] = 
         common.EnvKafka.consumerTopic(config.processedTopic, builder)
 
-      def backfeedTopic(stream: KStream[String, Variable]): Unit =
-        common.EnvKafka.producerTopic[Variable](config.backfeedTopic)(stream)
+      def backfeedTopic(stream: KStream[Name, Variable]): Unit =
+        common.EnvKafka.producerTopic[Name, Variable](config.backfeedTopic)(stream)
     }
   }
 }

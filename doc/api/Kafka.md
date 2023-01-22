@@ -29,3 +29,7 @@ Potem podajemy recordy postaci:
 ```json
 test:{"name":"test","value":5,"time":"1970-01-01T00:00:00Z"}
 ```
+```
+// kafka-console-producer --broker-list kafka:9092 --topic inputTest --property "parse.key=true" --property "key.separator=@"
+{"statistic":"statT","strategy":"stratT","subject":"subjT"}@{"name":{"statistic":"statT","strategy":"stratT","subject":"subjT"},"value":5,"time":"1970-01-01T00:00:00Z"}
+```

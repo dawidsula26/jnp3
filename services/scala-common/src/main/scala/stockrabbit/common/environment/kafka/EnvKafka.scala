@@ -50,12 +50,14 @@ object EnvKafka {
   def serde[T >: Null: Encoder: Decoder]: Serde[T] = 
     Serdes.fromFn[T](serialize[T](_, _), deserialize[T](_, _))
 
-  def consumerTopic[V >: Null: Encoder: Decoder](topic: InputTopic, builder: StreamsBuilder): KStream[String, V] = {
-    builder.stream(topic.name)(Consumed.`with`(Serdes.stringSerde, serde[V]))
+  def consumerTopic[K >: Null: Encoder: Decoder, V >: Null: Encoder: Decoder]
+    (topic: InputTopic, builder: StreamsBuilder): KStream[K, V] = {
+    builder.stream(topic.name)(Consumed.`with`(serde[K], serde[V]))
   }
 
-  def producerTopic[V >: Null: Decoder: Encoder](topic: OutputTopic)(stream: KStream[String, V]): Unit = {
-    stream.to(topic.name)(Produced.`with`(Serdes.stringSerde, serde[V]))
+  def producerTopic[K >: Null: Encoder: Decoder, V >: Null: Decoder: Encoder]
+    (topic: OutputTopic)(stream: KStream[K, V]): Unit = {
+    stream.to(topic.name)(Produced.`with`(serde[K], serde[V]))
   }
 
   implicit class StreamWithTo[K, V](stream: KStream[K, V]) {

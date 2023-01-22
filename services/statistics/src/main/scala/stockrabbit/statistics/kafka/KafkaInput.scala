@@ -3,10 +3,10 @@ package stockrabbit.statistics.kafka
 import cats.effect._
 import cats.effect.unsafe.{implicits => unsafe}
 import stockrabbit.statistics.environment.general.Environment
-import stockrabbit.statistics.model.Variable
 import stockrabbit.statistics.mongo.VariableCollection
 import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.KafkaStreams
+import stockrabbit.common.model.variable.Variable
 
 class KafkaInput(env: Environment[IO]) {
   def processRecord(
