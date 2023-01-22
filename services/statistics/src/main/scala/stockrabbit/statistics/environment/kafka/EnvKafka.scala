@@ -1,36 +1,28 @@
 package stockrabbit.statistics.environment.kafka
 
-import cats.effect._
-import fs2.kafka._
-import fs2.Stream
 import stockrabbit.statistics.model.Variable
 import stockrabbit.common.environment.{kafka => common}
+import org.apache.kafka.streams.scala.kstream._
+import org.apache.kafka.streams.scala._
+import stockrabbit.common.environment.general.Address
 
-trait EnvKafka[F[_]] {
-  def processedTopic: Stream[F, Variable]
-  def backfeedTopic: Stream[F, Variable] => Stream[F, ProducerResult[Unit, String, String]]
+trait EnvKafka extends common.EnvKafka {
+  def processedTopic(builder: StreamsBuilder): KStream[String, Variable]
+  def backfeedTopic(stream: KStream[String, Variable]): Unit
 }
 
 object EnvKafka {
-  def impl[F[_]: Async](config: ConfigKafka): Resource[F, EnvKafka[F]] = {
-    new EnvKafkaBuilder(config).build
-  }
-}
+  def impl(config: ConfigKafka): EnvKafka = {
+    new EnvKafka {
+      protected def address: Address = config.address
 
-private class EnvKafkaBuilder[F[_]: Async](config: ConfigKafka) {
-  def makeProcessedTopic: Resource[F, Stream[F, Variable]] =
-    common.EnvKafka.consumerTopic[F, Variable](config, config.processedTopic)
+      protected def consumerGroup: String = config.consumerGroup
 
-  def makeBackfeedTopic: Stream[F, Variable] => Stream[F, ProducerResult[Unit, String, String]] =
-    common.EnvKafka.producerTopic(config, config.backfeedTopic, _.name)
+      def processedTopic(builder: StreamsBuilder): KStream[String,Variable] = 
+        common.EnvKafka.consumerTopic(config.processedTopic, builder)
 
-  def build: Resource[F, EnvKafka[F]] = {
-    for {
-      input <- makeProcessedTopic
-      backfeed = makeBackfeedTopic
-    } yield (new EnvKafka[F] {
-      def processedTopic = input
-      def backfeedTopic = backfeed
-    })
+      def backfeedTopic(stream: KStream[String, Variable]): Unit =
+        common.EnvKafka.producerTopic(config.backfeedTopic)(stream)
+    }
   }
 }

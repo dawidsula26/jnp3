@@ -5,7 +5,8 @@ val LogbackVersion = "1.2.11"
 val MunitCatsEffectVersion = "1.0.7"
 val MongoCatsVersion = "0.6.6"
 val PureConfigVersion = "0.17.2"
-val FS2KafkaVersion = "3.0.0-M8"
+val KafkaStreamsVersion = "3.3.2"
+val CatsEffectsVersion = "3.4.5"
 val CirceKafkaVersion = "2.7.0"
 
 lazy val someLib = ProjectRef(file("../scala-common"), "common")
@@ -30,7 +31,8 @@ lazy val root = (project in file("."))
       "ch.qos.logback"        %  "logback-classic"           % LogbackVersion         % Runtime,
       "org.scalameta"         %% "svm-subs"                  % "20.2.0",
       "com.github.pureconfig" %% "pureconfig"                % PureConfigVersion,
-      "com.github.fd4s"       %% "fs2-kafka"                 % FS2KafkaVersion,
+      "org.apache.kafka"      %% "kafka-streams-scala"       % KafkaStreamsVersion,
+      "org.typelevel"         %% "cats-effect"               % CatsEffectsVersion,
       "com.nequissimus"       %% "circe-kafka"               % CirceKafkaVersion excludeAll(
         ExclusionRule("io.circe")
       )

@@ -7,6 +7,7 @@ import stockrabbit.common.environment.{kafka => common}
 
 case class ConfigKafka(
   address: Address,
+  consumerGroup: String, 
 
   processedTopic: OutputTopic,
   backfeedTopic: InputTopic,

@@ -35,12 +35,6 @@ object StatisticsServer {
       .build
   }
 
-  def makeKafka(env: Environment[IO]): IO[Unit] = {
-    for {
-      _ <- KafkaInput.run(env).start
-    } yield ()
-  }
-
   def run: IO[Nothing] = {
     implicit val ioAsync = IO.asyncForIO
     val resources = for {
@@ -48,7 +42,7 @@ object StatisticsServer {
       config <- Resource.eval(Config.impl(setupVersion))
       env <- Environment.impl(config)
       _ <- makeServer(env)
-      _ <- Resource.eval(makeKafka(env))
+      _ <- KafkaInput.run(env)
     } yield ()
     resources.useForever
   }

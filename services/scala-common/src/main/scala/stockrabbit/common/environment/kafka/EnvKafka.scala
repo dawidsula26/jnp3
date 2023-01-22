@@ -1,72 +1,62 @@
 package stockrabbit.common.environment.kafka
 
 import cats.effect._
-import fs2.kafka._
-import fs2.Stream
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import org.apache.kafka.streams.scala._
+import stockrabbit.common.environment.general.Address
+import org.apache.kafka.streams.KafkaStreams
+import java.util.Properties
+import org.apache.kafka.streams.StreamsConfig
+import org.apache.kafka.streams.scala.kstream._
+import org.apache.kafka.streams.scala.serialization.Serdes
 
+
+trait EnvKafka {
+  protected def address: Address
+  protected def consumerGroup: String
+  
+  private def kafkaProperties: Properties = {
+    val p = new Properties()
+    p.put(StreamsConfig.APPLICATION_ID_CONFIG, consumerGroup)
+    p.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, address.str)
+    p
+  }
+
+  def runStreams(makeStreams: StreamsBuilder => IO[Unit]): Resource[IO, KafkaStreams] = {
+    val builder = new StreamsBuilder
+    for {
+      _ <- Resource.eval(makeStreams(builder))
+      streams <- Resource.eval(IO(new KafkaStreams(builder.build(), kafkaProperties)))
+      streamsResource <- Resource.make(IO(streams.start()).as(streams))(streams => IO(streams.close()))
+    } yield (streamsResource)
+  }
+}
 
 object EnvKafka {
-  private def consumerTopicImpl[F[_]: Async, K, V]
-    (config: ConfigKafka, topic: InputTopic)
-    (implicit a: Deserializer[F, K], b: Deserializer[F, V]): 
-      Resource[F, KafkaConsumer[F, K, V]] = 
-  {
-    val settings = ConsumerSettings[F, K, V]
-      .withAutoOffsetReset(AutoOffsetReset.Earliest)
-      .withBootstrapServers(config.address.str)
-      .withGroupId(topic.consumerGroup)
-    KafkaConsumer.resource(settings)
-      .evalTap(_.subscribeTo(topic.name))
+  private def consumerTopicImpl(topic: InputTopic, builder: StreamsBuilder): KStream[String, String] = {
+    builder.stream(topic.name)(Consumed.`with`(Serdes.stringSerde, Serdes.stringSerde))
   }
 
-  def consumerTopic[F[_]: Async, V: Decoder]
-    (config: ConfigKafka, topic: InputTopic): 
-      Resource[F, Stream[F, V]] = 
-  {
-    for {
-      consumer <- consumerTopicImpl[F, Unit, String](config, topic)
-      result = consumer.records
-        .map(record => parse(record.record.value))
-        .map(_.toOption.get)
-        .map(_.as[V])
-        .map(_.toOption.get)
-    } yield (result)
+  def consumerTopic[V: Decoder](topic: InputTopic, builder: StreamsBuilder): KStream[String, V] = {
+    consumerTopicImpl(topic, builder)
+      .flatMapValues(v => parse(v).toOption)
+      .flatMapValues(v => v.as[V].toOption)
   }
 
-
-  private def producerTopicImpl[F[_]: Async, K, V]
-    (config: ConfigKafka, topic: OutputTopic)
-    (implicit a: Serializer[F, K], b: Serializer[F, V]):
-      Stream[F, (K, V)] => Stream[F, ProducerResult[Unit, K, V]] = 
-  {
-    def valueWrapper(t: (K, V)): ProducerRecords[Unit, K, V] = {
-      val record = ProducerRecord(topic.name, t._1, t._2) 
-      ProducerRecords.one(record)
-    }
-    
-    val settings = ProducerSettings[F, K, V]
-      .withBootstrapServers(config.address.str)
-    val producerPipe = KafkaProducer.pipe[F, K, V, Unit](settings)
-    print(producerPipe)
-
-    def processStream(stream: Stream[F, (K, V)]): Stream[F, ProducerResult[Unit, K, V]] = {
-      val recordStream = stream.map(valueWrapper(_))
-      val producerStream = recordStream.through(producerPipe)
-      producerStream
-    }
-    stream => processStream(stream)
+  private def producerTopicImpl(topic: OutputTopic)(stream: KStream[String, String]): Unit = {
+    stream.to(topic.name)(Produced.`with`(Serdes.stringSerde, Serdes.stringSerde))
   }
 
-  def producerTopic[F[_]: Async, K: Encoder, V: Encoder]
-    (config: ConfigKafka, topic: OutputTopic, key: V => K)
-    (stream: Stream[F, V]): 
-      Stream[F, ProducerResult[Unit, String, String]] = 
-  {
-    val streamWithKeys = stream.map(v => (key(v), v))
-    val stringStream = streamWithKeys.map(v => (v._1.asJson.noSpaces, v._2.asJson.noSpaces))
-    stringStream.through(producerTopicImpl[F, String, String](config, topic))
+  def producerTopic[V: Encoder](topic: OutputTopic)(stream: KStream[String, V]): Unit = {
+    stream
+      .mapValues(_.asJson)
+      .mapValues(_.noSpaces)
+      .to(producerTopicImpl(topic)(_))
+  }
+
+  implicit class StreamWithTo[K, V](stream: KStream[K, V]) {
+    def to(topic: KStream[K, V] => Unit) = topic(stream)
   }
 }

@@ -3,18 +3,16 @@ package stockrabbit.calculations.environment.general
 import stockrabbit.calculations.environment.kafka.EnvKafka
 import stockrabbit.calculations.environment.server.EnvServer
 
-import cats.effect._
-
 trait Environment[F[_]] {
-  def kafka: EnvKafka[F]
+  def kafka: EnvKafka
   def server: EnvServer[F]
 }
 
 object Environment {
-  def impl[F[_]: Async](config: Config) = {
+  def impl[F[_]](config: Config) = {
     for {
-      envKafka <- EnvKafka.impl[F](config.kafka)
       envServer <- EnvServer.impl[F](config.server)
+      envKafka = EnvKafka.impl(config.kafka)
     } yield (new Environment[F]{
       def kafka = envKafka
       def server = envServer
