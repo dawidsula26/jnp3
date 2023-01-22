@@ -11,6 +11,7 @@ import java.util.Properties
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.scala.kstream._
 import org.apache.kafka.streams.scala.serialization.Serdes
+import org.apache.kafka.common.serialization.Serde
 
 
 trait EnvKafka {
@@ -35,25 +36,26 @@ trait EnvKafka {
 }
 
 object EnvKafka {
-  private def consumerTopicImpl(topic: InputTopic, builder: StreamsBuilder): KStream[String, String] = {
-    builder.stream(topic.name)(Consumed.`with`(Serdes.stringSerde, Serdes.stringSerde))
+  private def serialize[T: Encoder](topic: String, data: T): Array[Byte] =
+    Serdes.stringSerde.serializer().serialize(topic, data.asJson.noSpaces)
+
+  private def deserialize[T: Decoder](topic: String, data: Array[Byte]): Option[T] = {
+    val string = Serdes.stringSerde.deserializer().deserialize(topic, data)
+    for {
+      json <- parse(string).toOption
+      value <- json.as[T].toOption
+    } yield (value)
   }
 
-  def consumerTopic[V: Decoder](topic: InputTopic, builder: StreamsBuilder): KStream[String, V] = {
-    consumerTopicImpl(topic, builder)
-      .flatMapValues(v => parse(v).toOption)
-      .flatMapValues(v => v.as[V].toOption)
+  def serde[T >: Null: Encoder: Decoder]: Serde[T] = 
+    Serdes.fromFn[T](serialize[T](_, _), deserialize[T](_, _))
+
+  def consumerTopic[V >: Null: Encoder: Decoder](topic: InputTopic, builder: StreamsBuilder): KStream[String, V] = {
+    builder.stream(topic.name)(Consumed.`with`(Serdes.stringSerde, serde[V]))
   }
 
-  private def producerTopicImpl(topic: OutputTopic)(stream: KStream[String, String]): Unit = {
-    stream.to(topic.name)(Produced.`with`(Serdes.stringSerde, Serdes.stringSerde))
-  }
-
-  def producerTopic[V: Encoder](topic: OutputTopic)(stream: KStream[String, V]): Unit = {
-    stream
-      .mapValues(_.asJson)
-      .mapValues(_.noSpaces)
-      .to(producerTopicImpl(topic)(_))
+  def producerTopic[V >: Null: Decoder: Encoder](topic: OutputTopic)(stream: KStream[String, V]): Unit = {
+    stream.to(topic.name)(Produced.`with`(Serdes.stringSerde, serde[V]))
   }
 
   implicit class StreamWithTo[K, V](stream: KStream[K, V]) {

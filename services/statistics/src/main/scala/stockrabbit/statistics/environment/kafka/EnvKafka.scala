@@ -22,7 +22,7 @@ object EnvKafka {
         common.EnvKafka.consumerTopic(config.processedTopic, builder)
 
       def backfeedTopic(stream: KStream[String, Variable]): Unit =
-        common.EnvKafka.producerTopic(config.backfeedTopic)(stream)
+        common.EnvKafka.producerTopic[Variable](config.backfeedTopic)(stream)
     }
   }
 }

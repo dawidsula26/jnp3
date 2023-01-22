@@ -20,7 +20,7 @@ object EnvKafka {
       protected def consumerGroup: String = config.consumerGroup
 
       def processedTopic(stream: KStream[String,Variable]): Unit = 
-        common.EnvKafka.producerTopic(config.processedTopic)(stream)
+        common.EnvKafka.producerTopic[Variable](config.processedTopic)(stream)
 
       def inputTopic(builder: StreamsBuilder): KStream[String,Variable] = 
         common.EnvKafka.consumerTopic(config.inputTopic, builder)
