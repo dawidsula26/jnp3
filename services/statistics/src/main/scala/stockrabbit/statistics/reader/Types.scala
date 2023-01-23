@@ -19,7 +19,7 @@ object GetVariable {
 
   @JsonCodec(encodeOnly = true) case class Response(
     variableName: Name,
-    values: Seq[Variable]
+    values: Seq[(Value, Timestamp)]
   )
   object Response {
     implicit def encoder[F[_]]: EntityEncoder[F, Response] =

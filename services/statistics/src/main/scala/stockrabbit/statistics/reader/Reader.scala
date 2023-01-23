@@ -26,10 +26,12 @@ object Reader {
       }
       for {
         collection <- VariableCollection.get(database)
-        variables <- collection.find(Seq(filterName, filterStartTime, filterEndTime)).all
+        variableDocs <- collection.find(Seq(filterName, filterStartTime, filterEndTime)).all
+        variables = variableDocs.map(VariableDocument.fromDocument(_))
+        values = variables.map(v => (v.value, v.time))
       } yield (GetVariable.Response(
         request.variableName,
-        variables.toSeq.map(VariableDocument.fromDocument(_))
+        values.toSeq
       ))
     }
   }
