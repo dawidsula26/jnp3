@@ -31,7 +31,8 @@ def get_available_strategies():
 def get_variable_values(variable_name,
                         date_begin,
                         date_end):
-   data = {'variableName': variable_name,
+
+   data = {'variableName': {'statistic': 'statT', 'strategy': 'stratT', 'subject': 'subjT'},
            'startTime': None,
            'endTime': None}
    r = requests.post(url = STATISTICS_URL + '/reader/getVariable', json = data) 
@@ -40,8 +41,8 @@ def get_variable_values(variable_name,
    print(values)
 
    df = pd.DataFrame({
-      'Date': [v['time'] for v in values],
-      'USD': [v['value'] for v in values]
+      'Date': [v[1] for v in values],
+      'USD': [v[0] for v in values]
    })
    return df
 
