@@ -6,7 +6,6 @@ import plotly.express as px
 import redis
 import random
 import requests
-import yaml
 from dotenv import load_dotenv
 from datetime import datetime
 from flask import Flask,\
@@ -33,21 +32,35 @@ app.config.update(
 cache = Cache(app)  # Initialize Cache
 
 def get_available_strategies():
-   f = open('config.yaml')
-   service_config = yaml.load(f)
+   f = open('config.json')
+   service_config = json.load(f)
 
-   strategies_sets = service_config['available_strategies']
-   return strategies_sets
+   strategies_sets = service_config['available_variables']
+
+   strategies = []
+   for sset in strategies_sets:
+      strategy = f'{sset[2]}-{sset[1]}-{sset[0]}'
+      strategies.append(strategy)
+
+   return strategies
 
 
-def get_variable_values(variable_name,
+def get_variable_values(selected_strategy,
                         date_begin,
                         date_end):
 
    date_begin = datetime.strptime(date_begin, '%Y-%m-%d')
    date_end = datetime.strptime(date_end, '%Y-%m-%d')
+
+   subject = selected_strategy.split('-')[0]
+   strat = selected_strategy.split('-')[1]
+   stat = selected_strategy.split('-')[2]
+
+   strat = None if strat == 'None' else strat
+   stat = None if stat == 'None' else stat
+   subject = None if subject == 'None' else subject
       
-   data = {'variableName': {'statistic': 'statT', 'strategy': 'stratT', 'subject': 'subjT'},
+   data = {'variableName': {'statistic': stat, 'strategy': strat, 'subject': subject},
            'startTime': date_begin.strftime('%Y-%m-%dT%H:%M:%SZ'),
            'endTime': date_end.strftime('%Y-%m-%dT%H:%M:%SZ')}
 
@@ -80,7 +93,6 @@ def index():
 def variable():
    if request.method == 'POST':
       selected_strategy = request.form.get('selected_strategy')
-      selected_set = request.form.get('selected_set')
       date_begin = request.form.get('date_begin')
       date_end = request.form.get('date_end')
    else:
@@ -94,7 +106,6 @@ def variable():
    return render_template('variable.html', strats=strategies_sets,
                                            graphJSON=graphJSON,
                                            strat_name=selected_strategy,
-                                           set_name=selected_set,
                                            date_begin=date_begin,
                                            date_end=date_end,
                                            strat_desc='DESCRIPTION')

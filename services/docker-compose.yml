@@ -38,6 +38,12 @@ services:
     environment:
       SETUP_VERSION: "dockerTest"
 
+  scraper:
+    build:
+      context: ./scraper
+    depends_on:
+      - kafka-init
+
   redis:
     image: "redis:alpine"
     container_name: redis-container
