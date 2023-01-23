@@ -39,7 +39,7 @@ def get_available_strategies():
 
    strategies = []
    for sset in strategies_sets:
-      strategy = f'{sset[2]}@{sset[1]}@{sset[0]}'
+      strategy = f'{sset[2]}-{sset[1]}-{sset[0]}'
       strategies.append(strategy)
 
    return strategies
@@ -52,9 +52,9 @@ def get_variable_values(selected_strategy,
    date_begin = datetime.strptime(date_begin, '%Y-%m-%d')
    date_end = datetime.strptime(date_end, '%Y-%m-%d')
 
-   subject = selected_strategy.split('@')[0]
-   strat = selected_strategy.split('@')[1]
-   stat = selected_strategy.split('@')[2]
+   subject = selected_strategy.split('-')[0]
+   strat = selected_strategy.split('-')[1]
+   stat = selected_strategy.split('-')[2]
 
    strat = None if strat == 'None' else strat
    stat = None if stat == 'None' else stat
