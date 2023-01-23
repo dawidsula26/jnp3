@@ -5,8 +5,9 @@ import stockrabbit.statistics.environment.general.Environment
 import cats._
 import cats.implicits._
 import java.time.Instant
-import stockrabbit.statistics.model.Variable
 import stockrabbit.statistics.mongo.VariableCollection
+import stockrabbit.common.model.variable._
+import stockrabbit.common.model.variable.name._
 
 trait Manager[F[_]] {
   def initializeDatabase(): F[Unit]
@@ -26,9 +27,9 @@ object Manager {
       val database = env.mongo.database
 
       def v(v: Double, t: Long): Variable = Variable(
-        Variable.Name("v"), 
-        Variable.Value(v), 
-        Variable.Timestamp(Instant.ofEpochSecond(t))
+        Name(Statistic("stat"), Some(Strategy("strat")), Some(Subject("subj"))), 
+        Value(v), 
+        Timestamp(Instant.ofEpochSecond(t))
       )
       val toInsert = Seq(
         v(5.8, 0),

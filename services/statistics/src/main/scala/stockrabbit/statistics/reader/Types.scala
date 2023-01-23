@@ -1,19 +1,16 @@
 package stockrabbit.statistics.reader
 
-import stockrabbit.statistics.model._
-
 import io.circe.generic.JsonCodec
-
-
 import cats.effect.Concurrent
 import org.http4s._
 import org.http4s.circe._
+import stockrabbit.common.model.variable._
 
 object GetVariable {
   @JsonCodec(decodeOnly = true) case class Request(
-    variableName: Variable.Name, 
-    startTime: Option[Variable.Timestamp],
-    endTime: Option[Variable.Timestamp]
+    variableName: Name, 
+    startTime: Option[Timestamp],
+    endTime: Option[Timestamp]
   )
   object Request {
     implicit def decoder[F[_]: Concurrent]: EntityDecoder[F, Request] =
@@ -21,8 +18,8 @@ object GetVariable {
   }
 
   @JsonCodec(encodeOnly = true) case class Response(
-    variableName: Variable.Name,
-    values: Seq[Variable]
+    variableName: Name,
+    values: Seq[(Value, Timestamp)]
   )
   object Response {
     implicit def encoder[F[_]]: EntityEncoder[F, Response] =

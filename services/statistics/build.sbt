@@ -5,10 +5,13 @@ val LogbackVersion = "1.2.11"
 val MunitCatsEffectVersion = "1.0.7"
 val MongoCatsVersion = "0.6.6"
 val PureConfigVersion = "0.17.2"
-val FS2KafkaVersion = "3.0.0-M8"
+val KafkaStreamsVersion = "3.3.2"
 val CirceKafkaVersion = "2.7.0"
 
+lazy val someLib = ProjectRef(file("../scala-common"), "common")
+
 lazy val root = (project in file("."))
+  .dependsOn(someLib)
   .settings(
     organization := "stockrabbit",
     name := "statistics",
@@ -29,7 +32,7 @@ lazy val root = (project in file("."))
       "io.github.kirill5k"    %% "mongo4cats-core"           % MongoCatsVersion,
       "io.github.kirill5k"    %% "mongo4cats-embedded"       % MongoCatsVersion       % Test,
       "com.github.pureconfig" %% "pureconfig"                % PureConfigVersion,
-      "com.github.fd4s"       %% "fs2-kafka"                 % FS2KafkaVersion,
+      "org.apache.kafka"      %% "kafka-streams-scala"       % KafkaStreamsVersion,
       "com.nequissimus"       %% "circe-kafka"               % CirceKafkaVersion excludeAll(
         ExclusionRule("io.circe")
       )
