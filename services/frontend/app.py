@@ -72,7 +72,7 @@ def get_variable_values(variable_name,
 @app.route('/', methods=['GET'])
 def index():
    strategies_sets = get_available_strategies()
-   return render_template('index.html', strats=strategies_sets)
+   return render_template('index.html', strats=strategies_sets, date_begin='2023-01-01', date_end='2023-01-07')
 
 
 # specific variable
@@ -95,6 +95,8 @@ def variable():
                                            graphJSON=graphJSON,
                                            strat_name=selected_strategy,
                                            set_name=selected_set,
+                                           date_begin=date_begin,
+                                           date_end=date_end,
                                            strat_desc='DESCRIPTION')
       
 

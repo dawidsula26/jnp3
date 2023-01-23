@@ -24,9 +24,9 @@
                                 {%endfor%}
                             </select>
                             <label for="date_begin">From:</label>
-                            <input type="date" id="date_begin" name="date_begin" value="2022-01-01" required/>
+                            <input type="date" id="date_begin" name="date_begin" value={{ date_begin }} required/>
                             <label for="date_end">To:</label>
-                            <input type="date" id="date_end" name="date_end" value="2023-01-01" required/>
+                            <input type="date" id="date_end" name="date_end" value={{ date_end }} required/>
                             <input type="submit" class="pure-button pure-button-primary" style="margin-top: 30px" value="Show simulation">
                         </fieldset>
                     </form>

@@ -21,7 +21,7 @@ object Reader {
         case None => VariableCollection.Filter.empty
       }
       val filterEndTime = request.endTime match {
-        case Some(t) => VariableCollection.Filter.lt(t)
+        case Some(t) => VariableCollection.Filter.lte(t)
         case None => VariableCollection.Filter.empty
       }
       for {
