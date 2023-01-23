@@ -1,0 +1,6 @@
+{
+  "available_variables": [
+    ["stockValue", null, "Telsa"],
+    ["stockValue", null, "Macrohard"]
+  ]
+}
