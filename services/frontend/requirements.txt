@@ -1,7 +1,9 @@
 flask
+flask_caching
 redis
 plotly
 pandas
 datetime
 requests
+python-dotenv
 pyyaml==5.4.1

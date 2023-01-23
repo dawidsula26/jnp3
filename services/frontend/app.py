@@ -1,24 +1,37 @@
 import pandas as pd
 import json
+import os
 import plotly
 import plotly.express as px
 import redis
 import random
 import requests
 import yaml
+from dotenv import load_dotenv
 from datetime import datetime
 from flask import Flask,\
                   render_template,\
                   url_for,\
                   request,\
                   redirect
+from flask_caching import Cache  # Import Cache from flask_caching module
+
+load_dotenv()
 
 app = Flask(__name__, static_url_path='')
+app.config.update(
+    CACHE_TYPE = os.environ['CACHE_TYPE'],
+    CACHE_REDIS_HOST = os.environ['CACHE_REDIS_HOST'],
+    CACHE_REDIS_PORT = os.environ['CACHE_REDIS_PORT'],
+    CACHE_REDIS_DB = os.environ['CACHE_REDIS_DB'],
+    CACHE_REDIS_URL = os.environ['CACHE_REDIS_URL'],
+    CACHE_DEFAULT_TIMEOUT = os.environ['CACHE_DEFAULT_TIMEOUT'],
+    STATISTICS_URL = os.environ['STATISTICS_URL'],
+    SECRET_KEY = "2a7c9ef01952a238eb"
+)
 
-# Let's ignore the fact, that secret key is public - for simplicity :)
-app.config['SECRET_KEY'] = "2a7c9ef01952a238eb"
+cache = Cache(app)  # Initialize Cache
 
-STATISTICS_URL = 'http://statistics:8080'
 
 def get_available_strategies():
    f = open('config.yaml')
@@ -31,11 +44,21 @@ def get_available_strategies():
 def get_variable_values(variable_name,
                         date_begin,
                         date_end):
+
+   date_begin = datetime.strptime(date_begin, '%Y-%m-%d')
+   date_end = datetime.strptime(date_end, '%Y-%m-%d')
+      
    data = {'variableName': variable_name,
-           'startTime': None,
-           'endTime': None}
-   r = requests.post(url = STATISTICS_URL + '/reader/getVariable', json = data) 
-   response = r.json()
+           'startTime': None, # date_begin.strftime('%Y-%m-%dT%H:%M:%SZ'),
+           'endTime': date_end.strftime('%Y-%m-%dT%H:%M:%SZ')}
+
+   response = cache.get(str(data))
+
+   if response is None:        
+      r = requests.post(url = app.config['STATISTICS_URL'] + '/reader/getVariable', json = data) 
+      response = r.json()
+      cache.set(str(data), response)
+
    values = response['values']
    print(values)
 
