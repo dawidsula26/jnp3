@@ -32,7 +32,6 @@ app.config.update(
 
 cache = Cache(app)  # Initialize Cache
 
-
 def get_available_strategies():
    f = open('config.yaml')
    service_config = yaml.load(f)
@@ -48,8 +47,8 @@ def get_variable_values(variable_name,
    date_begin = datetime.strptime(date_begin, '%Y-%m-%d')
    date_end = datetime.strptime(date_end, '%Y-%m-%d')
       
-   data = {'variableName': variable_name,
-           'startTime': None, # date_begin.strftime('%Y-%m-%dT%H:%M:%SZ'),
+   data = {'variableName': {'statistic': 'statT', 'strategy': 'stratT', 'subject': 'subjT'},
+           'startTime': date_begin.strftime('%Y-%m-%dT%H:%M:%SZ'),
            'endTime': date_end.strftime('%Y-%m-%dT%H:%M:%SZ')}
 
    response = cache.get(str(data))
@@ -63,8 +62,8 @@ def get_variable_values(variable_name,
    print(values)
 
    df = pd.DataFrame({
-      'Date': [v['time'] for v in values],
-      'USD': [v['value'] for v in values]
+      'Date': [v[1] for v in values],
+      'USD': [v[0] for v in values]
    })
    return df
 

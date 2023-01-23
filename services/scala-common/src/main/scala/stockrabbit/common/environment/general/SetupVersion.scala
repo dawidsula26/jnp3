@@ -1,4 +1,6 @@
-package stockrabbit.statistics.environment.general
+package stockrabbit.common.environment.general
+
+import cats.effect._
 
 sealed trait SetupVersion {
   def name: String
@@ -18,6 +20,16 @@ object SetupVersion {
   }
   object DockerProd extends SetupVersion {
     def name = "dockerProd"
+  }
+
+  def impl(): IO[SetupVersion] = {
+    val possibleVersionsMap = SetupVersion.versions.map(v => v.name -> v).toMap
+    for {
+      env <- IO(sys.env)
+      versionNameOption <- IO(env.get(SetupVersion.setupVersionVariableName))
+      versionName = versionNameOption.getOrElse(SetupVersion.Local.name)
+      version = possibleVersionsMap.get(versionName).get
+    } yield (version)
   }
 }
 

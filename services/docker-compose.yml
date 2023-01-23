@@ -17,6 +17,24 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    volumes:
+      - ./scala-common:/scala-common
+    environment:
+      SETUP_VERSION: "dockerTest"
+
+  calculations:
+    build:
+      context: ./calculations
+    depends_on:
+      - kafka-init
+    ports:
+      - "8081:8080"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./scala-common:/scala-common
     environment:
       SETUP_VERSION: "dockerTest"
 
