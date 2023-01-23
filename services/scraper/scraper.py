@@ -9,10 +9,17 @@ NOISE_AMPLITUDE = 30
 SIN_AMPLITUDE = 1
 SIN_LENGTH = 500
 
-sleep(30)
 
 # adress to kafkabroker
-producer = KafkaProducer(bootstrap_servers='kafka:9092')
+while True:
+    try:
+        producer = KafkaProducer(bootstrap_servers='kafka:9092')
+        break
+    except Exception as e:
+        print(e)
+        print('Retrying in 30 seconds...')
+        sleep(30)
+
 
 def generate_next_value(previous_value, minute):
     new_value = previous_value + LINEAR_COEFF

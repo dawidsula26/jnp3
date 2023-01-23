@@ -2,4 +2,6 @@
 
 ### :hammer_and_wrench: Running :hammer_and_wrench:
 
-In `services` directory, do `sudo docker compose build` and then `sudo docker compose up`. Web app should be visible at port `3000`.
+In `services` directory, do `sudo docker compose build` and then `sudo docker-compose up`. Web app should be visible at port `80`.
+
+Scraper will fill last week with augmented data

@@ -8,6 +8,7 @@ import random
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
+import socket
 from flask import Flask,\
                   render_template,\
                   url_for,\
@@ -85,7 +86,11 @@ def get_variable_values(selected_strategy,
 @app.route('/', methods=['GET'])
 def index():
    strategies_sets = get_available_strategies()
-   return render_template('index.html', strats=strategies_sets, date_begin='2023-01-01', date_end='2023-01-07')
+   return render_template('index.html',
+                          strats=strategies_sets,
+                          date_begin='2023-01-01',
+                          date_end='2023-01-23',
+                          container=socket.gethostname())
 
 
 # specific variable
