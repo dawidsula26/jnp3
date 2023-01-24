@@ -69,19 +69,7 @@ services:
     ports:
       - "6379:6379"
 
-  mongo:
-    image: "mongo"
-    ports:
-      - "27017:27017"
-
-  mongo-init:
-    image: "mongo"
-    depends_on:
-      - mongo
-    command: "bash -c 'sh /init/start.sh'"
-    volumes:
-      - ./mongo:/init
-      
+  # Kafka 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     container_name: zookeeper
@@ -112,3 +100,66 @@ services:
     command: "bash -c 'sh /init/start.sh'"
     volumes:
       - ./kafka:/init
+  
+  # Mongo
+  mongo:
+    image: mongo:6.0.1
+    container_name: mongo
+    command: mongos --port 27017 --configdb rs-config-server/configsvr01:27017,configsvr02:27017 --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./scripts:/scripts
+
+  configsvr01:
+    image: mongo:6.0.1
+    container_name: mongo-config-01 
+    command: mongod --port 27017 --configsvr --replSet rs-config-server
+    volumes:
+      - ./scripts:/scripts 
+  configsvr02:
+    image: mongo:6.0.1
+    container_name: mongo-config-02 
+    command: mongod --port 27017 --configsvr --replSet rs-config-server
+    volumes:
+      - ./scripts:/scripts
+
+  shard01-a:
+    image: mongo:6.0.1
+    container_name: shard-01-node-a
+    command: mongod --port 27017 --shardsvr --replSet rs-shard-01
+    volumes:
+      - ./scripts:/scripts
+  shard01-b:
+    image: mongo:6.0.1
+    container_name: shard-01-node-b
+    command: mongod --port 27017 --shardsvr --replSet rs-shard-01
+    volumes:
+      - ./scripts:/scripts
+
+  shard02-a:
+    image: mongo:6.0.1
+    container_name: shard-02-node-a
+    command: mongod --port 27017 --shardsvr --replSet rs-shard-02
+    volumes:
+      - ./scripts:/scripts
+  shard02-b:
+    image: mongo:6.0.1
+    container_name: shard-02-node-b
+    command: mongod --port 27017 --shardsvr --replSet rs-shard-02
+    volumes:
+      - ./scripts:/scripts
+
+  mongo-init: 
+    image: mongo:6.0.1
+    command: "bash -c 'sh /init/start.sh'"
+    depends_on:
+      - mongo
+      - configsvr01
+      - configsvr02
+      - shard01-a
+      - shard01-b
+      - shard02-a
+      - shard02-b
+    volumes:
+      - ./mongo:/init
