@@ -14,7 +14,6 @@ class KafkaInput(env: Environment[IO]) {
     variable: Variable
   ): Unit = {
     val io = for {
-      _ <- IO.blocking(println(variable))
       _ <- collection.insert(Seq(variable))
     } yield ()
     io.unsafeRunSync()(unsafe.global)

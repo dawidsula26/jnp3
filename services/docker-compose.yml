@@ -1,25 +1,32 @@
 version: "3.7"
 services:
-  front:
+  front_worker:
     build:
       context: ./frontend
 
-  nginx:
+  front:
     image: nginx:latest
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx-front.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - front
+      - front_worker
     ports:
       - "80:80"
 
   statistics:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx-statistics.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - statistics_worker
+    ports:
+      - "8080:8080"
+
+  statistics_worker:
     build:
       context: ./statistics
     depends_on:
       - kafka-init
-    ports:
-      - "8080:8080"
     ulimits:
       nofile:
         soft: 65536

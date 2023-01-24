@@ -1,0 +1,1 @@
+docker-compose up --scale front_worker=3 --scale statistics_worker=3
