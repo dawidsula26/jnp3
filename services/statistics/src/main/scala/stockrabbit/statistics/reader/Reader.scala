@@ -29,9 +29,10 @@ object Reader {
         variableDocs <- collection.find(Seq(filterName, filterStartTime, filterEndTime)).all
         variables = variableDocs.map(VariableDocument.fromDocument(_))
         values = variables.map(v => (v.value, v.time))
+        valuesSorted = values.toSeq.sortBy(_._2.time)
       } yield (GetVariable.Response(
         request.variableName,
-        values.toSeq
+        valuesSorted
       ))
     }
   }
