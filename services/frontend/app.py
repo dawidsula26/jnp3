@@ -8,6 +8,8 @@ import random
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
+import socket
+from copy import deepcopy
 from flask import Flask,\
                   render_template,\
                   url_for,\
@@ -45,6 +47,20 @@ def get_available_strategies():
    return strategies
 
 
+def fetch_values_from_statistics(data):
+   r = requests.post(url = app.config['STATISTICS_URL'] + '/reader/getVariable', json = data) 
+   response = r.json()
+   values = response['values']
+   values = [(v[0], to_datetime(v[1])) for v in values]
+   values.sort(key=lambda x: x[1])
+
+   return values
+
+
+def to_datetime(datestr):
+   return datetime.strptime(datestr, '%Y-%m-%dT%H:%M:%SZ')
+
+
 def get_variable_values(selected_strategy,
                         date_begin,
                         date_end):
@@ -64,15 +80,47 @@ def get_variable_values(selected_strategy,
            'startTime': date_begin.strftime('%Y-%m-%dT%H:%M:%SZ'),
            'endTime': date_end.strftime('%Y-%m-%dT%H:%M:%SZ')}
 
-   response = cache.get(str(data))
+   # get cached data
+   cache_key = str(data['variableName'])
+   values = cache.get(cache_key)
 
-   if response is None:        
-      r = requests.post(url = app.config['STATISTICS_URL'] + '/reader/getVariable', json = data) 
-      response = r.json()
-      cache.set(str(data), response)
+   # nothing is cached:
+   if values is None or len(values) == 0:
+      values = fetch_values_from_statistics(data)
+      cache.set(cache_key, values)
+   # cached data found:
+   else:
+      lowest_cached_date = values[0][1]
+      highest_cached_date = values[-1][1]
 
-   values = response['values']
-   print(values)
+      print('Found cached values, cache from to:', flush=True)
+      print(lowest_cached_date, flush=True)
+      print(highest_cached_date, flush=True)
+
+      # # get intersection of cached data and requested
+      changed_cache = False
+
+      # get missing data before cached
+      if date_begin < lowest_cached_date:
+         data2 = deepcopy(data)
+         data2['endTime'] = lowest_cached_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+         missing_values = fetch_values_from_statistics(data2)
+         values = missing_values + values
+         changed_cache = True
+
+      # get missing data after cached
+      if highest_cached_date < date_end:
+         data2 = deepcopy(data)
+         data2['startTime'] = highest_cached_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+         missing_values = fetch_values_from_statistics(data2)
+         values = values + missing_values
+         changed_cache = True
+      
+      if changed_cache:
+         cache.set(cache_key, values)
+
+      # get selected area
+      values = [v for v in values if date_begin <= v[1] <= date_end]
 
    df = pd.DataFrame({
       'Date': [v[1] for v in values],
@@ -85,7 +133,11 @@ def get_variable_values(selected_strategy,
 @app.route('/', methods=['GET'])
 def index():
    strategies_sets = get_available_strategies()
-   return render_template('index.html', strats=strategies_sets, date_begin='2023-01-01', date_end='2023-01-07')
+   return render_template('index.html',
+                          strats=strategies_sets,
+                          date_begin='2023-01-01',
+                          date_end='2023-01-23',
+                          container=socket.gethostname())
 
 
 # specific variable
