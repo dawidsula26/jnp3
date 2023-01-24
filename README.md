@@ -14,9 +14,10 @@ It's a powerful app with distributed workers that calculate necessary statistics
 
 ### What's inside?
 
-We created microservices architecture with additional load balancing and cache to store statistics values recently displayed by the user. Here is the architecture:
-- Front(frontend_worker)
-- Wyniki(statistics_worker)
+We created microservices architecture with additional load balancing and cache to store statistics values recently displayed by the user. Architecture consists of:
+- Front(frontend_worker) + Nginx loadbalancer + Redis Cache
+- Wyniki(statistics_worker) + Nginx loadbalancer
+- Kafka, KafkaStreams
 - Obliczenia(calculations)
 - Scraper
 
