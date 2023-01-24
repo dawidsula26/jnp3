@@ -11,11 +11,11 @@ trait Inputs {
 }
 
 object Inputs {
-  private val stockValuesName = "stockValues"
+  private val stockValuesName = "stockValue"
   private def stockValuesPred(name: Name, @unused variable: Variable): Boolean = 
     name.statistic.statistic == stockValuesName
 
-  private val stockTradesName = "stockTrades"
+  private val stockTradesName = "stockTrade"
   private def stockTradesPred(name: Name, @unused variable: Variable): Boolean =
     name.statistic.statistic == stockTradesName
 
