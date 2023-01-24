@@ -20,9 +20,10 @@ We created microservices architecture with additional load balancing and cache t
 - Obliczenia(calculations)
 - Scraper
 
-![Zrzut ekranu z 2022-12-04 22-11-18](https://user-images.githubusercontent.com/34144008/214242307-fc63c3e7-b376-4149-afa7-b44494988841.png)
+Specific API's and descriptions can be found in `doc/` directory
 
-Further reading here: https://docs.google.com/presentation/d/1NeY_ds-0lgPKPMuKfU92a4aIgXwGDdNmopUcuS2iQR4/edit?usp=sharing
+Our presentation (polish) with more information can be found here: https://docs.google.com/presentation/d/1NeY_ds-0lgPKPMuKfU92a4aIgXwGDdNmopUcuS2iQR4/edit?usp=sharing
+
 
 ### How to run it locally?
 
