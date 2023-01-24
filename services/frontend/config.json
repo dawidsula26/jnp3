@@ -1,6 +1,10 @@
 {
   "available_variables": [
     ["stockValue", null, "Telsa"],
-    ["stockValue", null, "Macrohard"]
+    ["stockValue", null, "Macrohard"],
+    ["stockValueSum", null, "Telsa"],
+    ["stockValueSum", null, "Macrohard"],
+    ["stockValueAvg", null, "Telsa"],
+    ["stockValueAvg", null, "Macrohard"]
   ]
 }
