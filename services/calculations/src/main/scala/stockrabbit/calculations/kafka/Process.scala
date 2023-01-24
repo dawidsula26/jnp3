@@ -2,10 +2,14 @@ package stockrabbit.calculations.kafka
 
 import cats.effect._
 import stockrabbit.calculations.environment.general.Environment
+import stockrabbit.calculations.kafka.Inputs
 import stockrabbit.common.environment.kafka.EnvKafka.StreamWithTo
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.scala._
 import stockrabbit.common.model.variable._
+import stockrabbit.calculations.kafka.logic.Recent
+import java.time.Duration
+import stockrabbit.common.model.variable.name._
 
 class Process(env: Environment[IO]) {
   def initAggregation: Option[Value] = None
@@ -18,8 +22,16 @@ class Process(env: Environment[IO]) {
 
   def build(builder: StreamsBuilder): IO[Unit] = {
     val input = env.kafka.inputTopic(builder)
-    val sums = Transform.mono[Option[Value], Name, Variable, Variable](initAggregation, processAggregation(_, _))(input)
-    sums.to(env.kafka.processedTopic(_))
+    val inputs = Inputs.impl(input)
+
+    inputs.stockValues.to(env.kafka.processedTopic _)
+    inputs.stockTrades.to(env.kafka.processedTopic _)
+
+    Recent.sum(Statistic("stockValueSum"), Duration.ofHours(1))(inputs.stockValues)
+      .to(env.kafka.processedTopic _)
+    
+    Recent.avg(Statistic("stockValueAvg"), Duration.ofHours(1))(inputs.stockValues)
+      .to(env.kafka.processedTopic _)
 
     IO.pure(())
   }
