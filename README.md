@@ -30,6 +30,12 @@ Our presentation (polish) with more information can be found here: https://docs.
 
 In `services` directory, do 
 
+`chmod a+x run.sh`
+
+`./run.sh`
+
+Or specify manually number of front and statistics workers:
+
 `sudo docker compose build`
 
 `sudo docker-compose up --scale front_worker=2 --scale statistics_worker=2`
